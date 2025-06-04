@@ -1,51 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Dashboard - Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard - Quiz Show Platform</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <!-- Embedded CSS for Dashboard Style -->
+  <style>
+  body {
+  margin: 0;
+  font-family: 'Inter', Arial, sans-serif;
+  min-height: 100vh;
+  color: #22223b;
+
+  background: 
+    url('/static/images/dash_bg.png'); /* Replace with your actual image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2rem 3rem 1rem 2rem;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    nav h2 {
+      font-size: 2rem;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #22223b;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-size: 2rem;
+      margin-right: 1rem;
+      color: #22223b;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav a:hover {
+      color: #4A3AFF;
+    }
+
+    .primary-btn {
+      background-color: #4A3AFF;
+      color: #fff;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(74,58,255,0.12);
+      transition: background 0.2s;
+    }
+    .primary-btn:hover {
+      background-color: #3727c3;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* Header and Total Quizzes */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      margin-top: 1rem;
+    }
+    .dashboard-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .total-quizzes {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #4A3AFF;
+      margin-left: 0.5rem;
+    }
+
+    /* Quiz Cards Grid */
+    .quiz-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center; /* Center the cards horizontally */
+  margin-top: 1.5rem;
+  margin-bottom: 2.5rem;
+  min-height: 200px;
+}
+
+    .quiz-card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px 0 rgba(74,58,255,0.08), 0 1.5px 5px 0 rgba(0,0,0,0.03);
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      min-width: 320px;
+      max-width: 500px;
+      flex: 1 1 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: box-shadow 0.2s;
+    }
+    .quiz-card:hover {
+      box-shadow: 0 8px 32px 0 rgba(74,58,255,0.14), 0 2px 8px 0 rgba(0,0,0,0.04);
+    }
+
+    .quiz-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.7rem;
+      color: #22223b;
+    }
+    .quiz-info {
+      font-size: 1rem;
+      color: #34345c;
+      margin-bottom: 1.2rem;
+      line-height: 0.6;
+    }
+    .quiz-info span {
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+ 
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .quiz-grid {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .quiz-card {
+        max-width: 100%;
+        min-width: 0;
+      }
+      nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <nav>
-        <a href="/">← Home</a>
-        <h1>My Dashboard</h1>
-        <div id="user-info">
-            <span id="username"></span>
-            <button onclick="logout()">Logout</button>
-        </div>
-    </nav>
+  <nav>
+    <div style="display: flex; align-items: center; gap: 0.7rem;">
+      <a href="/">&#8592;</a>
+      <h2>My Quizzes</h2>
+    </div>
+    <button onclick="window.location.href='/create-quiz/'" class="primary-btn">
+      Create New Quiz
+    </button>
+  </nav>
 
-    <main>
-        <section>
-            <h2>My Quizzes</h2>
-            <button onclick="window.location.href='/create-quiz/'" class="primary-btn">
-                Create New Quiz
-            </button>
+  <main>
+    <div class="dashboard-header">
+      <div>
+        <span class="total-quizzes">Total Quizzes: <span id="total-quizzes">0</span></span>
+      </div>
+    </div>
+    <section>
+      <div id="my-quizzes" class="quiz-grid">
+        <!-- Example quiz cards (replace with dynamic JS) -->
+        <!-- End example cards -->
+      </div>
+    </section>
+  </main>
 
-            <div id="my-quizzes" class="quiz-grid">
-                <!-- Quizzes will be loaded here -->
-                <p>Loading your quizzes...</p>
-            </div>
-        </section>
-
-        <section>
-            <h2>Statistics</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Quizzes</h3>
-                    <p id="total-quizzes">0</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Total Players</h3>
-                    <p id="total-players">0</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script src="/static/js/api.js"></script>
-    <script src="/static/js/auth.js"></script>
-    <script src="/static/js/quiz.js"></script>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/quiz.js"></script>
 </body>
 </html>
