@@ -13,9 +13,9 @@ class GameManager {
     initializeGame() {
         // Check if we're hosting or playing
         const path = window.location.pathname;
-        if (path.includes('host-game.html')) {
+        if (path.includes('/host-game/')) {
             this.initializeHost();
-        } else if (path.includes('play-game.html')) {
+        } else if (path.includes('/play-game/')) {
             this.initializePlayer();
         }
     }
@@ -28,7 +28,7 @@ class GameManager {
 
         if (!quizId || !joinCode) {
             alert('No quiz selected');
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard/';
             return;
         }
 
@@ -104,7 +104,7 @@ class GameManager {
 
         if (!playerData.player || !playerData.session) {
             alert('No game session found');
-            window.location.href = 'join-game.html';
+            window.location.href = '/join-game/';
             return;
         }
 
@@ -284,7 +284,7 @@ class GameManager {
                     ${idx + 1}. ${player.nickname} - ${player.score} points
                 </div>
             `).join('')}
-            <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+            <button onclick="window.location.href='/dashboard/'">Back to Dashboard</button>
         `;
     }
 

@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Join Game - Quiz Show Platform</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <nav>
-        <a href="index.html">← Back</a>
+        <a href="/">← Back</a>
         <h1>Join a Quiz</h1>
     </nav>
 
@@ -35,7 +35,7 @@
         </form>
     </main>
 
-    <script src="js/api.js"></script>
+    <script src="/static/js/api.js"></script>
     <script>
         // Handle join form
         document.getElementById('join-form').addEventListener('submit', async (e) => {
@@ -52,7 +52,7 @@
                     localStorage.setItem('playerData', JSON.stringify(response));
 
                     // Redirect to game
-                    window.location.href = 'play-game.html';
+                    window.location.href = '/play-game/';
                 } else {
                     alert('Error: ' + (response.error || 'Failed to join game'));
                 }

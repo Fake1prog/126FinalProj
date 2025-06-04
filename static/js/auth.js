@@ -31,7 +31,7 @@ class AuthManager {
             if (response.username) {
                 localStorage.setItem('username', response.username);
                 localStorage.setItem('userId', response.id);
-                window.location.href = 'index.html';
+                window.location.href = '/';
             } else {
                 alert('Login failed: ' + (response.error || 'Unknown error'));
             }
@@ -46,7 +46,7 @@ class AuthManager {
             if (response.username) {
                 localStorage.setItem('username', response.username);
                 localStorage.setItem('userId', response.id);
-                window.location.href = 'index.html';
+                window.location.href = '/';
             } else {
                 alert('Registration failed: ' + (response.error || 'Unknown error'));
             }
@@ -59,7 +59,7 @@ class AuthManager {
         localStorage.removeItem('username');
         localStorage.removeItem('userId');
         localStorage.removeItem('authToken');
-        window.location.href = 'index.html';
+        window.location.href = '/';
     }
 }
 
