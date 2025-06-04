@@ -15,7 +15,7 @@ class QuizManager {
         }
 
         // Load user's quizzes if on dashboard
-        if (window.location.pathname.includes('dashboard.html')) {
+        if (window.location.pathname.includes('/dashboard/')) {
             this.loadMyQuizzes();
         }
     }
@@ -84,13 +84,13 @@ class QuizManager {
     hostQuiz(quizId, joinCode) {
         localStorage.setItem('currentQuizId', quizId);
         localStorage.setItem('currentQuizCode', joinCode);
-        window.location.href = 'host-game.html';
+        window.location.href = '/host-game/';
     }
 }
 
 // Global functions for HTML
 function startHosting() {
-    window.location.href = 'host-game.html';
+    window.location.href = '/host-game/';
 }
 
 function copyCode() {
