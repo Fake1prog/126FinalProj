@@ -64,7 +64,7 @@ class AuthManager {
                 alert('Login successful! Welcome back, ' + response.username);
 
                 // Redirect to dashboard instead of home
-                window.location.href = '/dashboard/';
+                window.location.href = '/';
             } else {
                 console.error('Login failed:', response);
                 alert('Login failed: ' + (response.error || 'Invalid response from server'));
@@ -99,7 +99,7 @@ class AuthManager {
                 alert('Registration successful! Welcome, ' + response.username);
 
                 // Redirect to dashboard
-                window.location.href = '/dashboard/';
+                window.location.href = '/';
             } else {
                 console.error('Registration failed:', response);
                 alert('Registration failed: ' + (response.error || 'Invalid response from server'));

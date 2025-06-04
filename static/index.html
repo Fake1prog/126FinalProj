@@ -422,8 +422,8 @@
                     <h1>Host a Quiz</h1>
                     <p>Create AI-generated quizzes instantly</p>
                     <div class="hero-buttons">
-                        <button onclick="window.location.href='/create-quiz/'">Create New Quiz</button>
-                        <button onclick="window.location.href='/dashboard/'">My Quizzes</button>
+                        <button onclick="handleCreateQuiz()">Create New Quiz</button>
+                        <button onclick="handleMyQuizzes()">My Quizzes</button>
                     </div>
                 </div>
                 <div class="hero-graphics">
@@ -486,6 +486,22 @@
                 localStorage.removeItem('pendingJoinCode');
             }
         });
+
+        function handleCreateQuiz() {
+            if (auth.isLoggedIn()) {
+                window.location.href = '/create-quiz/';
+            } else {
+                window.location.href = '/login/';
+            }
+        }
+
+        function handleMyQuizzes() {
+            if (auth.isLoggedIn()) {
+                window.location.href = '/dashboard/';
+            } else {
+                window.location.href = '/login/';
+            }
+        }
     </script>
 </body>
 </html>
