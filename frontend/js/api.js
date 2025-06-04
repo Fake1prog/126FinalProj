@@ -58,12 +58,23 @@ class QuizAPI {
 
     // Quiz endpoints
     async createQuizWithAI(title, topic, difficulty) {
+        console.log('Creating quiz with credentials...');
+
         const response = await fetch(`${API_BASE_URL}/quizzes/create_with_ai/`, {
             method: 'POST',
             headers: this.getHeaders(),
-            credentials: 'include',
+            credentials: 'include',  // CRITICAL: This must be here!
             body: JSON.stringify({ title, topic, difficulty })
         });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         return response.json();
     }
 
