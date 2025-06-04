@@ -57,14 +57,17 @@ class QuizManager {
     async loadMyQuizzes() {
         try {
             const response = await api.getMyQuizzes();
+            console.log('API Response:', response);
             const container = document.getElementById('my-quizzes');
 
-            if (response.length === 0) {
+            const quizzes = response.results || []; // Handle paginated results
+
+            if (quizzes.length === 0) {
                 container.innerHTML = '<p>No quizzes created yet.</p>';
                 return;
             }
 
-            container.innerHTML = response.map(quiz => `
+            container.innerHTML = quizzes.map(quiz => `
                 <div class="quiz-card">
                     <h3>${quiz.title}</h3>
                     <p>Topic: ${quiz.topic}</p>
@@ -78,8 +81,11 @@ class QuizManager {
             `).join('');
         } catch (error) {
             console.error('Error loading quizzes:', error);
+            const container = document.getElementById('my-quizzes');
+            container.innerHTML = '<p>Failed to load quizzes. Please try again later.</p>';
         }
     }
+
 
     hostQuiz(quizId, joinCode) {
         localStorage.setItem('currentQuizId', quizId);
