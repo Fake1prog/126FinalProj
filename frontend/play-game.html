@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Quiz - Quiz Show Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <main>
+        <!-- Player Info -->
+        <header>
+            <span>Player: <strong id="player-name">Name</strong></span>
+            <span>Score: <strong id="score">0</strong></span>
+        </header>
+
+        <!-- Waiting State -->
+        <section id="waiting" class="center">
+            <h2>Waiting for host to start...</h2>
+            <p>Get ready!</p>
+        </section>
+
+        <!-- Question Display -->
+        <section id="question-display" style="display:none;">
+            <h3 id="question-text">Question appears here</h3>
+            <div id="answer-buttons">
+                <button class="answer-btn" onclick="selectAnswer(0)"></button>
+                <button class="answer-btn" onclick="selectAnswer(1)"></button>
+                <button class="answer-btn" onclick="selectAnswer(2)"></button>
+                <button class="answer-btn" onclick="selectAnswer(3)"></button>
+            </div>
+            <div class="timer">
+                Time: <span id="timer">20</span>s
+            </div>
+        </section>
+
+        <!-- Feedback -->
+        <section id="feedback" style="display:none;">
+            <h3 id="result">Correct! ✓</h3>
+            <p>Points earned: <span id="points">0</span></p>
+            <p>Waiting for next question...</p>
+        </section>
+
+        <!-- Final Results -->
+        <section id="final-results" style="display:none;">
+            <h2>Game Over!</h2>
+            <p>Your Score: <span id="final-score">0</span></p>
+            <div id="leaderboard"></div>
+            <button onclick="window.location.href='index.html'">Back to Home</button>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
