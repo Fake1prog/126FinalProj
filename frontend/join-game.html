@@ -34,5 +34,32 @@
             <button type="submit">Join Game</button>
         </form>
     </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Handle join form
+        document.getElementById('join-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const joinCode = document.getElementById('join-code').value.toUpperCase();
+            const nickname = document.getElementById('nickname').value;
+
+            try {
+                const response = await api.joinQuiz(joinCode, nickname);
+
+                if (response.player && response.session) {
+                    // Store player data
+                    localStorage.setItem('playerData', JSON.stringify(response));
+
+                    // Redirect to game
+                    window.location.href = 'play-game.html';
+                } else {
+                    alert('Error: ' + (response.error || 'Failed to join game'));
+                }
+            } catch (error) {
+                alert('Error joining game: ' + error.message);
+            }
+        });
+    </script>
 </body>
 </html>
