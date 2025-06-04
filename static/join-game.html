@@ -1,65 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join Game - Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Join Game - Quiz Show Platform</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <style>
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: 
+    url('./images/dash_bg.png'); /* Replace with your actual image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+      color: #22223b;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 0;
+    }
+
+    nav {
+        margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 0 1rem 2rem;
+      background: transparent;
+      box-shadow: none;
+    }
+    nav h2 {
+      font-size: 2rem;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #22223b;
+    }
+    nav a {
+      text-decoration: none;
+      font-size: 2rem;
+      color: #22223b;
+      font-weight: 500;
+      transition: color 0.2s;
+      margin-right: 1rem;
+    }
+    nav a:hover {
+      color: #4A3AFF;
+    }
+
+    .center-card-container {
+      width: 100vw;
+      min-height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quiz-card {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 rgba(74, 58, 255, 0.10);
+      padding: 4rem 4rem 4rem 4rem;
+      max-width: 700px;
+      width: 100%;
+      gap: 5rem;
+    }
+
+    .quiz-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(74, 58, 255, 0.1);
+  padding: 3rem 5rem 3rem 5rem;
+  max-width: 700px;
+  width: 90%;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.quiz-illustration {
+  flex: 1 1 160px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 250px;
+  padding: 1rem;
+}
+
+.quiz-illustration img {
+  width: 150%;
+  max-width:500px;
+  height: auto;
+}
+
+.quiz-form-section {
+  flex: 2 1 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+    .quiz-form-section h2 {
+      margin: 0 0 1.1rem 0;
+      color: #22223b;
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      text-align: left;
+    }
+
+    .quiz-form-section input[type="text"] {
+  width: 90%;
+  padding: 0.85rem 0.8rem;
+  font-size: 1.08rem;
+  border: 1.8px solid #e0e3f7;
+  border-radius: 9px;
+  margin-bottom: 1.1rem;
+  background: #f7f8fd;
+  transition: border 0.2s;
+  outline: none;
+  color: #22223b;
+  font-weight: 500;
+}
+
+    .quiz-form-section input[type="text"]:focus {
+      border: 2px solid #4a3aff;
+      background: #fff;
+    }
+
+    .quiz-form-section input[type="text"]::placeholder {
+      color: #b6b8d6;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .quiz-form-section button {
+      background: linear-gradient(90deg, #4a3aff 70%, #7d6bff 100%);
+      color: #fff;
+      border: none;
+      border-radius: 2rem;
+      padding: 1.1rem 0;
+      font-size: 1.13rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.5rem;
+      box-shadow: 0 2px 10px 0 rgba(74, 58, 255, 0.13);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .quiz-form-section button:hover {
+      background: linear-gradient(90deg, #2a1a9e 70%, #4a3aff 100%);
+      box-shadow: 0 4px 16px 0 rgba(74, 58, 255, 0.18);
+    }
+
+    @media (max-width: 900px) {
+      .quiz-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 2rem 1.2rem;
+        gap: 1.5rem;
+        min-width: unset;
+        max-width: 96vw;
+      }
+      .quiz-illustration {
+        justify-content: flex-start;
+        margin-bottom: 1rem;
+      }
+    }
+    @media (max-width: 600px) {
+      nav {
+        padding: 1.2rem 0 0.5rem 1rem;
+      }
+      .quiz-card {
+        padding: 1.1rem 0.5rem;
+        border-radius: 13px;
+      }
+      .quiz-illustration img {
+        width: 110px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <nav>
-        <a href="/">← Back</a>
-        <h1>Join a Quiz</h1>
-    </nav>
+  <nav>
+    <div style="display: flex; align-items: center; gap: 0.7rem;">
+      <a href="/">&#8592;</a>
+      <h2>Join a Quiz</h2>
+    </div>
+  </nav>
 
-    <main>
-        <form id="join-form" class="join-form">
-            <h2>Enter Game Details</h2>
-
-            <div class="form-group">
-                <label for="join-code">Join Code:</label>
-                <input type="text" id="join-code" required
-                       maxlength="6"
-                       placeholder="ABC123"
-                       style="text-transform: uppercase;">
-            </div>
-
-            <div class="form-group">
-                <label for="nickname">Your Nickname:</label>
-                <input type="text" id="nickname" required
-                       maxlength="20"
-                       placeholder="Enter your name">
-            </div>
-
-            <button type="submit">Join Game</button>
+  <div class="center-card-container">
+    <div class="quiz-card">
+      <div class="quiz-illustration">
+        <!-- Replace with your own illustration or use a placeholder -->
+        <img src="./images/abc.png" alt="Quiz Bubbles Illustration" />
+      </div>
+      <div class="quiz-form-section">
+        <h2>Enter Game Details</h2>
+        <form id="join-form" autocomplete="off">
+          <input
+            type="text"
+            id="join-code"
+            required
+            maxlength="6"
+            placeholder="Join Code"
+            autocomplete="off"
+            style="text-transform: uppercase; letter-spacing: 0.12em;"
+          />
+          <input
+            type="text"
+            id="nickname"
+            required
+            maxlength="20"
+            placeholder="Enter Nickname"
+            autocomplete="off"
+          />
+          <button type="submit">Generate New Quiz with AI</button>
         </form>
-    </main>
+      </div>
+    </div>
+  </div>
 
-    <script src="/static/js/api.js"></script>
-    <script>
-        // Handle join form
-        document.getElementById('join-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+  <script src="/static/js/api.js"></script>
+  <script>
+    document.getElementById('join-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-            const joinCode = document.getElementById('join-code').value.toUpperCase();
-            const nickname = document.getElementById('nickname').value;
+      const joinCode = document.getElementById('join-code').value.toUpperCase();
+      const nickname = document.getElementById('nickname').value;
 
-            try {
-                const response = await api.joinQuiz(joinCode, nickname);
+      try {
+        const response = await api.joinQuiz(joinCode, nickname);
 
-                if (response.player && response.session) {
-                    // Store player data
-                    localStorage.setItem('playerData', JSON.stringify(response));
-
-                    // Redirect to game
-                    window.location.href = '/play-game/';
-                } else {
-                    alert('Error: ' + (response.error || 'Failed to join game'));
-                }
-            } catch (error) {
-                alert('Error joining game: ' + error.message);
-            }
-        });
-    </script>
+        if (response.player && response.session) {
+          localStorage.setItem('playerData', JSON.stringify(response));
+          window.location.href = '/play-game/';
+        } else {
+          alert('Error: ' + (response.error || 'Failed to join game'));
+        }
+      } catch (error) {
+        alert('Error joining game: ' + error.message);
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,29 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Dashboard - Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css" />
 
-    <!-- Embedded CSS for Dashboard Style -->
-    <style>
-      body {
-        margin: 0;
-        font-family: "Inter", Arial, sans-serif;
-        min-height: 100vh;
-        color: #22223b;
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard - Quiz Show Platform</title>
+  <link rel="stylesheet" href="/static/css/style.css">
 
-        background: url("/static/images/dash_bg.png"); /* Replace with your actual image path */
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
+  <!-- Embedded CSS for Dashboard Style -->
+  <style>
+  body {
+  margin: 0;
+  font-family: 'Display', sans-serif;
+  min-height: 100vh;
+  color: #22223b;
 
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-        box-sizing: border-box;
-      }
+  background: 
+    url('/static/images/dash_bg.png'); /* Replace with your actual image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2rem 3rem 1rem 2rem;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    nav h2 {
+      font-size: 2rem;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #22223b;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-size: 2rem;
+      margin-right: 1rem;
+      color: #22223b;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav a:hover {
+      color: #4A3AFF;
+    }
+
+    .primary-btn {
+      background-color: #4A3AFF;
+      color: #fff;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(74,58,255,0.12);
+      transition: background 0.2s;
+    }
+    .primary-btn:hover {
+      background-color: #3727c3;
+    }
+
 
       nav {
         display: flex;
