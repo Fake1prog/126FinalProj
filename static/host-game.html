@@ -3,59 +3,593 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Host Game - Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Host Game - Quiz Platform</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: url("/static/images/dash_bg.png") center/cover no-repeat;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 60px;
+            width: 90%;
+            max-width: 900px;
+            display: flex;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .left-section {
+            flex: 1;
+            text-align: center;
+        }
+
+        .quiz-illustration {
+            width: 400px;
+            height: 400px;
+            background: url("/static/images/questionmarks.png") center/contain no-repeat;
+            margin: 0 auto;
+        }
+
+        .right-section {
+            flex: 1;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .join-code-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .player-count-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .status-text {
+            text-align: center;
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .player-list {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 100px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 30px;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 16px;
+            color: #374151;
+        }
+
+        .player-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .generate-button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .generate-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+        }
+
+        .generate-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .secondary-button {
+            background: white;
+            color: #6366f1;
+            border: 2px solid #6366f1;
+            padding: 16px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .secondary-button:hover {
+            background: #6366f1;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .notification {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .notification.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .game-controls {
+            display: none;
+        }
+
+        .game-controls.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                gap: 30px;
+                padding: 30px;
+            }
+
+            .game-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <main>
-        <!-- Game Info -->
-        <header>
+    <div class="container">
+        <div class="left-section">
+            <div class="quiz-illustration"></div>
+        </div>
+
+        <div class="right-section">
             <h1 id="quiz-title">Quiz Title</h1>
-            <div class="game-info">
-                <span>Join Code: <strong id="join-code">ABC123</strong></span>
-                <span>Players: <strong id="player-count">0</strong></span>
-            </div>
-        </header>
 
-        <!-- Waiting Room -->
-        <section id="waiting-room">
-            <h2>Waiting for Players...</h2>
-            <div id="player-list">
-                <!-- Players will appear here -->
-            </div>
-            <button onclick="startGame()" disabled id="start-btn">
-                Start Game (Need at least 1 player)
-            </button>
-        </section>
-
-        <!-- Game Controls -->
-        <section id="game-controls" style="display:none;">
-            <div class="question-display">
-                <h3>Question <span id="question-number">1</span> of 10</h3>
-                <p id="question-text">Question will appear here</p>
-                <div id="answers">
-                    <!-- Answer options -->
-                </div>
+            <div class="game-header">
+                <div class="join-code-display">Join Code: <span id="join-code">ABC123</span></div>
+                <div class="player-count-display">Players: <span id="player-count">0</span></div>
             </div>
 
-            <div class="timer">
-                Time Remaining: <span id="timer">20</span>s
+            <div id="notification" class="notification"></div>
+
+            <div class="status-text" id="status-text">
+                Waiting for Players...
             </div>
 
-            <button onclick="showResults()">Show Results</button>
-            <button onclick="nextQuestion()">Next Question</button>
-        </section>
-
-        <!-- Live Leaderboard -->
-        <section id="leaderboard">
-            <h3>Leaderboard</h3>
-            <div id="scores">
-                <!-- Live scores -->
+            <div class="player-list" id="player-list">
+                <div style="text-align: center; color: #6b7280;">No players connected yet</div>
             </div>
-        </section>
-    </main>
 
-    <script src="/static/js/api.js"></script>
-    <script src="/static/js/game.js"></script>
+            <div id="waiting-controls">
+                <button class="generate-button" id="start-game-btn" onclick="startGame()">
+                    <div class="loading-spinner" id="loadingSpinner"></div>
+                    <span id="buttonText">Start Game (Need at least 1 player)</span>
+                </button>
+                <button class="secondary-button" onclick="refreshPlayers()">
+                    Refresh Players
+                </button>
+                <button class="secondary-button" onclick="window.location.href='/dashboard/'">
+                    Back to Dashboard
+                </button>
+            </div>
+
+            <div id="active-controls" class="game-controls">
+                <button class="generate-button" id="next-question-btn" onclick="nextQuestion()">
+                    <div class="loading-spinner" id="nextLoadingSpinner"></div>
+                    <span id="nextButtonText">Next Question</span>
+                </button>
+                <button class="secondary-button" onclick="endGame()">
+                    End Game
+                </button>
+            </div>
+
+            <div id="finished-controls" class="game-controls">
+                <button class="generate-button" onclick="viewResults()">
+                    View Final Results
+                </button>
+                <button class="secondary-button" onclick="window.location.href='/dashboard/'">
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let csrfToken = '';
+
+        class GameHostManager {
+            constructor() {
+                this.quizId = null;
+                this.sessionId = null;
+                this.gameStatus = 'waiting';
+                this.currentQuestionIndex = 0;
+                this.totalQuestions = 0;
+                this.players = [];
+                this.refreshInterval = null;
+
+                this.init();
+            }
+
+            async init() {
+                try {
+                    await this.fetchCSRFToken();
+                    await this.loadQuizFromURL();
+                    await this.loadQuizDetails();
+                    await this.createOrGetSession();
+                    this.startPlayerRefresh();
+                } catch (error) {
+                    console.error('Initialization error:', error);
+                    this.showNotification('Failed to initialize game. Please try again.', 'error');
+                }
+            }
+
+            async fetchCSRFToken() {
+                try {
+                    const response = await fetch(`${API_BASE}/auth/csrf/`);
+                    const data = await response.json();
+                    csrfToken = data.csrfToken;
+                } catch (error) {
+                    console.error('Failed to fetch CSRF token:', error);
+                }
+            }
+
+            loadQuizFromURL() {
+                const urlParams = new URLSearchParams(window.location.search);
+                this.quizId = urlParams.get('quiz_id');
+
+                if (!this.quizId) {
+                    throw new Error('No quiz ID provided');
+                }
+            }
+
+            async loadQuizDetails() {
+                try {
+                    const response = await fetch(`${API_BASE}/quizzes/${this.quizId}/`);
+                    if (!response.ok) throw new Error('Failed to load quiz');
+
+                    const quiz = await response.json();
+                    this.displayQuizInfo(quiz);
+                    this.totalQuestions = quiz.questions.length;
+                } catch (error) {
+                    console.error('Error loading quiz:', error);
+                    throw error;
+                }
+            }
+
+            displayQuizInfo(quiz) {
+                document.getElementById('quiz-title').textContent = quiz.title;
+                document.getElementById('join-code').textContent = quiz.join_code;
+            }
+
+            async createOrGetSession() {
+                try {
+                    const response = await fetch(`${API_BASE}/quizzes/${this.quizId}/start_session/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) throw new Error('Failed to create session');
+
+                    const session = await response.json();
+                    this.sessionId = session.id;
+                    this.gameStatus = session.status;
+                    this.updateGameStatus();
+                } catch (error) {
+                    console.error('Error creating session:', error);
+                    throw error;
+                }
+            }
+
+            async loadPlayers() {
+                if (!this.sessionId) return;
+
+                try {
+                    const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/leaderboard/`);
+                    if (!response.ok) throw new Error('Failed to load players');
+
+                    const data = await response.json();
+                    this.players = data.leaderboard || [];
+                    this.displayPlayers();
+                } catch (error) {
+                    console.error('Error loading players:', error);
+                }
+            }
+
+            displayPlayers() {
+                const playerList = document.getElementById('player-list');
+                const playerCount = document.getElementById('player-count');
+                const statusText = document.getElementById('status-text');
+
+                playerCount.textContent = this.players.length;
+
+                if (this.players.length === 0) {
+                    playerList.innerHTML = '<div style="text-align: center; color: #6b7280;">No players connected yet</div>';
+                    statusText.textContent = 'Waiting for Players...';
+                    return;
+                }
+
+                statusText.textContent = `${this.players.length} player${this.players.length !== 1 ? 's' : ''} ready to play!`;
+
+                playerList.innerHTML = this.players.map(player => `
+                    <div class="player-item">
+                        <div class="player-avatar">${player.nickname.charAt(0).toUpperCase()}</div>
+                        <div>${player.nickname}</div>
+                    </div>
+                `).join('');
+            }
+
+            startPlayerRefresh() {
+                this.loadPlayers();
+                this.refreshInterval = setInterval(() => {
+                    this.loadPlayers();
+                }, 3000);
+            }
+
+            async startGame() {
+                if (this.players.length === 0) {
+                    this.showNotification('Cannot start game without players! Wait for at least one player to join.', 'error');
+                    return;
+                }
+
+                try {
+                    this.setLoadingState(true, 'start');
+
+                    const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/start_game/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) throw new Error('Failed to start game');
+
+                    const data = await response.json();
+                    this.gameStatus = 'active';
+                    this.currentQuestionIndex = 0;
+                    this.updateGameStatus();
+                    this.showNotification('Game started! Players can now see the first question.', 'success');
+                } catch (error) {
+                    console.error('Error starting game:', error);
+                    this.showNotification('Failed to start game. Please try again.', 'error');
+                } finally {
+                    this.setLoadingState(false, 'start');
+                }
+            }
+
+            async nextQuestion() {
+                try {
+                    this.setLoadingState(true, 'next');
+
+                    const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/next_question/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) throw new Error('Failed to load next question');
+
+                    const data = await response.json();
+
+                    if (data.status === 'Quiz completed') {
+                        this.gameStatus = 'finished';
+                        this.updateGameStatus();
+                        this.showNotification('Quiz completed! All questions have been answered.', 'success');
+                    } else {
+                        this.currentQuestionIndex = data.question_number - 1;
+                        this.showNotification(`Question ${data.question_number} is now active!`, 'info');
+                    }
+                } catch (error) {
+                    console.error('Error loading next question:', error);
+                    this.showNotification('Failed to load next question. Please try again.', 'error');
+                } finally {
+                    this.setLoadingState(false, 'next');
+                }
+            }
+
+            updateGameStatus() {
+                document.getElementById('waiting-controls').style.display = this.gameStatus === 'waiting' ? 'block' : 'none';
+                document.getElementById('active-controls').style.display = this.gameStatus === 'active' ? 'block' : 'none';
+                document.getElementById('finished-controls').style.display = this.gameStatus === 'finished' ? 'block' : 'none';
+
+                // Update status text based on game state
+                const statusText = document.getElementById('status-text');
+                if (this.gameStatus === 'active') {
+                    statusText.textContent = `Game in progress - Question ${this.currentQuestionIndex + 1}`;
+                } else if (this.gameStatus === 'finished') {
+                    statusText.textContent = 'Game completed!';
+                }
+            }
+
+            setLoadingState(isLoading, type) {
+                if (type === 'start') {
+                    const button = document.getElementById('start-game-btn');
+                    const spinner = document.getElementById('loadingSpinner');
+                    const text = document.getElementById('buttonText');
+
+                    if (isLoading) {
+                        button.disabled = true;
+                        spinner.style.display = 'inline-block';
+                        text.textContent = 'Starting Game...';
+                    } else {
+                        button.disabled = false;
+                        spinner.style.display = 'none';
+                        text.textContent = 'Start Game (Need at least 1 player)';
+                    }
+                } else if (type === 'next') {
+                    const button = document.getElementById('next-question-btn');
+                    const spinner = document.getElementById('nextLoadingSpinner');
+                    const text = document.getElementById('nextButtonText');
+
+                    if (isLoading) {
+                        button.disabled = true;
+                        spinner.style.display = 'inline-block';
+                        text.textContent = 'Loading Next Question...';
+                    } else {
+                        button.disabled = false;
+                        spinner.style.display = 'none';
+                        text.textContent = 'Next Question';
+                    }
+                }
+            }
+
+            showNotification(message, type) {
+                const notification = document.getElementById('notification');
+                notification.textContent = message;
+                notification.className = `notification ${type}`;
+                notification.style.display = 'block';
+
+                if (type === 'success' || type === 'info') {
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                    }, 5000);
+                }
+            }
+
+            cleanup() {
+                if (this.refreshInterval) {
+                    clearInterval(this.refreshInterval);
+                }
+            }
+        }
+
+        let gameManager;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            gameManager = new GameHostManager();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (gameManager) {
+                gameManager.cleanup();
+            }
+        });
+
+        function refreshPlayers() {
+            if (gameManager) {
+                gameManager.loadPlayers();
+            }
+        }
+
+        function startGame() {
+            if (gameManager) {
+                gameManager.startGame();
+            }
+        }
+
+        function nextQuestion() {
+            if (gameManager) {
+                gameManager.nextQuestion();
+            }
+        }
+
+        function endGame() {
+            if (confirm('Are you sure you want to end the game?')) {
+                window.location.href = '/dashboard/';
+            }
+        }
+
+        function viewResults() {
+            if (gameManager && gameManager.sessionId) {
+                window.location.href = `/results/?session_id=${gameManager.sessionId}`;
+            }
+        }
+    </script>
 </body>
 </html>

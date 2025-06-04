@@ -1,0 +1,142 @@
+/* Login Page Styles */
+:root {
+    --primary-color: #6C63FF;
+    --text-color: #1A1A1A;
+    --background: #FAFAFB;
+    --card-background: #FFFFFF;
+    --input-background: #F8F8F8;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Display', sans-serif;
+    background: url('/static/images/login.png') no-repeat center center fixed;
+    background-size: cover;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 450px;
+    margin: 2rem;
+}
+
+.logo-container {
+    text-align: center;
+}
+
+.logo-container img {
+    max-width: 130px;
+    height: auto;
+}
+
+h2 {
+    color: #170F49;
+    font-size: 1.75rem;
+    margin: 0;
+    text-align: center;
+}
+
+.subtitle {
+    color: #6F6C90;
+    text-align: center;
+    margin: 1rem 0 2rem 0;
+    font-size: 0.95rem;
+}
+
+.auth-form {
+    background: var(--card-background);
+    padding: 2.5rem;
+    border-radius: 35px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #170F49;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #E0E0E0;
+    border-radius: 86px;
+    background: var(--input-background);
+    font-size: 1rem;
+    font-family: 'Display', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+.form-group input::placeholder {
+    color: #999;
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 1rem;
+    background: #4A3AFF;
+    color: white;
+    border: none;
+    border-radius: 85px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Display', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 1rem;
+}
+
+button[type="submit"]:hover {
+    background: #5850E6;
+}
+
+.auth-form p {
+    text-align: center;
+    color: #666;
+    margin: 1.5rem 0 0 0;
+    font-size: 0.9rem;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+nav {
+    display: block;
+    position: fixed; 
+    top: 3rem;  
+    left: 3rem;  
+}
+
+nav a.back-button:hover img {
+    filter: brightness(85%);  /* Slight darken on hover */
+}
