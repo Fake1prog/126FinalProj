@@ -84,6 +84,35 @@
         .nav-links a:hover {
             color: var(--accent);
         }
+
+        /* User info styles - initially hidden */
+        #user-info {
+            display: none;
+            align-items: center;
+            gap: 16px;
+            color: #fff;
+        }
+
+        #user-info #username {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        #user-info button {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        #user-info button:hover {
+            background: var(--accent);
+        }
+
         main {
             margin-top: 0;
         }
@@ -147,7 +176,7 @@
             align-items: center;
             justify-content: center;
         }
-       
+
 
         /* Join Quiz Section */
         .join-section {
@@ -203,7 +232,7 @@
             justify-content: center;
             color: #fff;
         }
-       
+
         .join-title {
             color: var(--primary);
             font-size: 1.1rem;
@@ -356,12 +385,12 @@
     </style>
 </head>
 <body>
-    <diV>
-<img src="./images/Group.png" alt="Dots pattern" class="dots-img dots-left-bottom">
-</diV>
-<!-- Right Bottom -->
-<img src="./images/Group.png"
-     alt="Dots pattern" class="dots-img dots-right-bottom">
+    <div>
+        <img src="./images/Group.png" alt="Dots pattern" class="dots-img dots-left-bottom">
+    </div>
+    <!-- Right Bottom -->
+    <img src="./images/Group.png"
+         alt="Dots pattern" class="dots-img dots-right-bottom">
 
     <nav>
         <div class="logo-area">
@@ -370,11 +399,20 @@
             </div>
             <span class="brand-title">AI THINK SO!</span>
         </div>
-        <div class="nav-links">
+
+        <!-- Navigation for non-logged-in users -->
+        <div class="nav-links" id="nav-links">
             <a href="/login/">Login</a>
             <a href="/register/">Register</a>
         </div>
+
+        <!-- Navigation for logged-in users (initially hidden) -->
+        <div id="user-info">
+            <span>Welcome, <span id="username"></span>!</span>
+            <button onclick="logout()">Logout</button>
+        </div>
     </nav>
+
     <main>
         <div class="hero">
             <div class="hero-content">
@@ -394,7 +432,7 @@
         <section class="join-section">
             <img src="./images/abc.png" alt="Icon" class="join-section-icon" />
             <div class="choices-graphic">
-                
+
             </div>
             <div class="join-content">
                 <div class="join-title">CLONEABLES FOR WEBFLOW</div>
@@ -416,6 +454,11 @@
             <div class="dot"></div><div class="dot"></div>
         </div>
     </main>
+
+    <!-- Include the required JavaScript files -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth.js"></script>
+
     <script>
         function joinQuiz(e) {
             if (e) e.preventDefault();
@@ -431,6 +474,7 @@
             localStorage.setItem('pendingJoinCode', joinCode);
             window.location.href = '/join-game/';
         }
+
         window.addEventListener('load', () => {
             const pendingCode = localStorage.getItem('pendingJoinCode');
             if (pendingCode && window.location.pathname.includes('/join-game/')) {
