@@ -122,6 +122,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5500",   # VS Code Live Server
     "http://127.0.0.1:8000",
     "http://localhost:8000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -131,17 +133,14 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:5500",       # VS Code Live Server
     "http://localhost:8000",
+    "http://127.0.0.1:5500",       # VS Code Live Server
 ]
 
-# Also ensure these are set
-CSRF_COOKIE_SAMESITE = 'Lax'  # Changed from None
-CSRF_COOKIE_SECURE = False
-CSRF_COOKIE_HTTPONLY = False
-
-# For development, you can also add this
-CSRF_COOKIE_DOMAIN = None
-
 CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_SAMESITE = 'None'  # Allow cross-site cookies
+SESSION_COOKIE_SECURE = False     # Allow non-HTTPS in development
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = False
 
 # REST Framework settings
 REST_FRAMEWORK = {
