@@ -3,61 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Quiz - Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Create New Quiz</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:600,400&display=swap">
+    <style>
+        body {
+            background: #fff;
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .quiz-container {
+            display: flex;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 5px 10px rgb(79, 44, 176);
+            padding: 48px 32px;
+            align-items: center;
+            max-width: 1000px;
+            width: 100%;
+        }
+        .quiz-image {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .quiz-image img {
+            width: 500px;
+            max-width: 100%;
+            height: auto;
+        }
+        .quiz-form-section {
+            flex: 1.2;
+            padding-left: 32px;
+        }
+        .quiz-form-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #23155B;
+            margin-bottom: 32px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 18px 20px;
+            border: 1.5px solid #E5E5E5;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #F8F8FF;
+            color: #23155B;
+            margin-top: 6px;
+            outline: none;
+            appearance: none;
+        }
+        .form-group label {
+            font-weight: 500;
+            color: #23155B;
+            font-size: 1rem;
+        }
+        .generate-btn {
+            width: 100%;
+            padding: 18px 0;
+            background: #5B36F4;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            margin-top: 18px;
+            transition: background 0.2s;
+        }
+        .generate-btn:hover {
+            background: #3e24b3;
+        }
+        @media (max-width: 900px) {
+            .quiz-container {
+                flex-direction: column;
+                padding: 24px 8px;
+            }
+            .quiz-form-section {
+                padding-left: 0;
+                width: 100%;
+            }
+            .quiz-image {
+                margin-bottom: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <nav>
-        <a href="/">← Back</a>
-        <h1>Create New Quiz</h1>
-    </nav>
-
-    <main>
-        <form id="create-quiz-form">
-            <!-- Quiz Title -->
-            <div class="form-group">
-                <label>Quiz Title:</label>
-                <input type="text" id="title" required
-                       placeholder="e.g., Ancient Egypt Trivia">
-            </div>
-
-            <!-- Topic for AI -->
-            <div class="form-group">
-                <label>Topic (AI will generate questions about this):</label>
-                <input type="text" id="topic" required
-                       placeholder="e.g., Ancient Egypt, Space Exploration, etc.">
-            </div>
-
-            <!-- Difficulty -->
-            <div class="form-group">
-                <label>Difficulty:</label>
-                <select id="difficulty">
-                    <option value="easy">Easy</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-            </div>
-
-            <!-- Submit Button -->
-            <button type="submit">Generate Quiz with AI</button>
-        </form>
-
-        <!-- Loading State -->
-        <div id="loading" style="display:none;">
-            <p>🤖 AI is generating your questions...</p>
-            <div class="spinner"></div>
+    <div class="quiz-container">
+        <div class="quiz-image">
+            <!-- Replace the src below with your actual image path -->
+            <img src="./images/questionmarks.png" alt="Quiz Illustration">
         </div>
-
-        <!-- Success State -->
-        <div id="success" style="display:none;">
-            <h3>Quiz Created!</h3>
-            <p>Join Code: <span id="join-code" class="code"></span></p>
-            <button onclick="startHosting()">Start Hosting</button>
-            <button onclick="copyCode()">Copy Code</button>
+        <div class="quiz-form-section">
+            <h2>Create New Quiz</h2>
+            <form>
+                <div class="form-group">
+                    <select id="quiz-title" required>
+                        <option value="">Quiz title...</option>
+                        <option value="ancient-egypt">Ancient Egypt Trivia</option>
+                        <option value="space-exploration">Space Exploration</option>
+                        <option value="general-knowledge">General Knowledge</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="topic" required>
+                        <option value="">Topic (AI will generate questions about this)</option>
+                        <option value="history">History</option>
+                        <option value="science">Science</option>
+                        <option value="sports">Sports</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <select id="difficulty" required>
+                        <option value="easy">Difficulty</option>
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <button type="submit" class="generate-btn">Generate New Quiz with AI</button>
+            </form>
         </div>
-    </main>
-
-    <script src="/static/js/api.js"></script>
-    <script src="/static/js/quiz.js"></script>
+    </div>
 </body>
 </html>
