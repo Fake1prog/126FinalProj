@@ -90,11 +90,6 @@ class QuizManager {
                 <p>Created: ${new Date(
                   quiz.created_at
                 ).toLocaleDateString()}</p>
-                <button onclick="quizManager.hostQuiz('${quiz.id}', '${
-            quiz.join_code
-          }')">
-                    Host This Quiz
-                </button>
             </div>
         `
         )
