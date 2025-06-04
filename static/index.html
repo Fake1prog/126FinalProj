@@ -3,83 +3,441 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <title>AI THINK SO! Quiz Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6d4aff;
+            --secondary: #f3f4ff;
+            --accent: #ffb84a;
+            --danger: #ff6d7a;
+            --info: #6db4ff;
+            --text-main: #1a1a2e;
+            --text-light: #fff;
+            --border-radius: 18px;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Display', sans-serif;
+            background: linear-gradient(90deg, #ffffff 0%,  #ffffff 0%,#979ff975 100%);
+            min-height: 130vh;
+            color: var(--text-main);
+              overflow-x: hidden;
+
+
+        }
+        nav {
+            width: 100%;
+            background: linear-gradient(90deg, #4A3AFF, #6D3AFF);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 32px 48px 0 48px;
+        }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-box {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;  /* Ensures the whole image fits without cropping */
+    border-radius: 12px;   /* Optional: match box shape, remove if not needed */
+    display: block;        /* Removes extra spacing from inline images */
+}
+        
+        .logo-box span {
+            font-size: 1.8rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .brand-title {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+        main {
+            margin-top: 0;
+        }
+        .hero {
+            width: 100%;
+            background: linear-gradient(90deg, #4A3AFF, #6D3AFF);
+            color: #fff;
+            padding: 56px 0 100px 0;
+            position: relative;
+        }
+        .hero-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+        }
+        .hero-text {
+            margin-left: 48px;
+            margin-top: 32px;
+        }
+        .hero-text h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        .hero-text p {
+            font-size: 1.2rem;
+            margin-bottom: 32px;
+            opacity: 0.92;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 18px;
+        }
+        .hero-buttons button {
+            font-size: 1.1rem;
+            padding: 18px 32px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: background 0.2s, color 0.2s;
+        }
+        .hero-buttons button:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+        .hero-graphics {
+            position: relative;
+            margin-right: 64px;
+            margin-top: 0;
+            width: 400px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+       
+
+        /* Join Quiz Section */
+        .join-section {
+            background: #ffffff00;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 10px #6D3AFF;
+            max-width: 1000px;
+            margin: 50px auto 0 auto;
+            padding: 40px 40px 40px 40px;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            gap: 50px;
+            align-items: flex-start;
+        }
+        .join-section-icon{
+    max-width: 100%;           /* optional: limit maximum size */
+    height: auto;              /* keeps aspect ratio */
+    object-fit: contain;       /* ensures the image is not cropped */
+    z-index: 999;
+    display: block;            /* avoids extra space under image */
+        }
+        .hero-icon{
+            width: 500px;
+    max-width: 150%;           /* optional: limit maximum size */
+    height: auto;              /* keeps aspect ratio */
+    object-fit: contain;       /* ensures the image is not cropped */
+    z-index: 999;
+    display: block;            /* avoids extra space under image */
+        }
+
+        .choices-graphic {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+            margin-top: 6px;
+        }
+
+        .choice {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .choice-circle {
+            width: 38px;
+            height: 38px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+       
+        .join-title {
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .join-main {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-main);
+        }
+        .join-form {
+             background: #f3f4ff;
+             padding: 10px;
+             border-radius: 30px;
+            border: 0px solid #e4e7fd;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+        .join-form input {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 30px;
+            border: 0px solid #e4e7fd00;
+            font-size: 1.1rem;
+            outline: none;
+            background: #f3f4ff00;
+            color: var(--primary);
+            font-weight: 600;
+            transition: border 0.2s;
+        }
+        .join-form input:focus {
+            border: 1.5px solid var(--primary);
+        }
+        .join-form button {
+            width: 120px;
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.8rem;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(109,74,255,0.10);
+            transition: background 0.2s;
+        }
+        .join-form button:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+        .features-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+            color: #444;
+        }
+        .feature-item .checkmark {
+           background-color: #4A3AFF;
+    width: 24px;               /* size of the circle */
+    height: 24px;
+    border-radius: 50%;        /* makes it a perfect circle */
+    color: var(--text-light);
+    font-size: 1rem;
+    display: flex;             /* centers content */
+    align-items: center;
+    justify-content: center;
+        }
+        /* Decorative dots */
+        .dots-img {
+  position: absolute;
+  width: 200px;       /* Adjust size as needed */
+  height: auto;
+  opacity: 0.7;       /* Optional: make it subtle */
+  z-index: 1;
+  pointer-events: none; /* So it doesn't block clicks */
+}
+
+/* Left bottom */
+.dots-left-bottom {
+    height: auto;
+     width: 400px;
+     max-width: 100%;
+  left: -200px;
+  top: 300px;
+}
+
+/* Right bottom */
+.dots-right-bottom {
+    height: auto;
+     width: 400px;
+     max-width: 100%;
+ right: -200px;
+  top: 200px;
+}
+
+
+
+        @media (max-width: 900px) {
+            .hero-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 28px;
+            }
+            .hero-graphics {
+                margin: 32px auto 0 auto;
+                width: 100%;
+                height: 180px;
+            }
+            .hero-text {
+                margin-left: 0;
+            }
+            .join-section {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 32px 18px 28px 18px;
+            }
+            .choices-graphic {
+                flex-direction: row;
+                gap: 16px;
+                margin-bottom: 18px;
+                margin-top: 0;
+            }
+        }
+        @media (max-width: 600px) {
+            nav {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 22px 12px 0 12px;
+            }
+            .hero-content {
+                padding: 0 12px;
+            }
+            .hero-text h1 {
+                font-size: 1.7rem;
+            }
+            .join-section {
+                padding: 22px 8px 16px 8px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <diV>
+<img src="./images/Group.png" alt="Dots pattern" class="dots-img dots-left-bottom">
+</diV>
+<!-- Right Bottom -->
+<img src="./images/Group.png"
+     alt="Dots pattern" class="dots-img dots-right-bottom">
+
     <nav>
-        <h1>Quiz Show Platform</h1>
-        <div id="nav-links">
+        <div class="logo-area">
+            <div class="logo-box">
+                  <img src="./images/logo.png" alt="Icon" class="logo-box img" />
+            </div>
+            <span class="brand-title">AI THINK SO!</span>
+        </div>
+        <div class="nav-links">
             <a href="/login/">Login</a>
             <a href="/register/">Register</a>
         </div>
-        <div id="user-info" style="display:none;">
-            <span id="username"></span>
-            <button onclick="logout()">Logout</button>
-        </div>
     </nav>
-
     <main>
-        <h2>Welcome to AI-Powered Quiz Show!</h2>
-
-        <!-- Host Section -->
-        <section class="card">
-            <h3>Host a Quiz</h3>
-            <p>Create AI-generated quizzes instantly</p>
-            <button onclick="window.location.href='/create-quiz/'">Create New Quiz</button>
-            <button onclick="window.location.href='/dashboard/'">My Quizzes</button>
+        <div class="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>Host a Quiz</h1>
+                    <p>Create AI-generated quizzes instantly</p>
+                    <div class="hero-buttons">
+                        <button onclick="window.location.href='/create-quiz/'">Create New Quiz</button>
+                        <button onclick="window.location.href='/dashboard/'">My Quizzes</button>
+                    </div>
+                </div>
+                <div class="hero-graphics">
+                    <img src="./images/questionmarks.png" alt="Icon" class="hero-icon" />
+                </div>
+            </div>
+        </div>
+        <section class="join-section">
+            <img src="./images/abc.png" alt="Icon" class="join-section-icon" />
+            <div class="choices-graphic">
+                
+            </div>
+            <div class="join-content">
+                <div class="join-title">CLONEABLES FOR WEBFLOW</div>
+                <div class="join-main">Join a Quiz</div>
+                <form class="join-form" onsubmit="joinQuiz(event)">
+                    <input type="text" id="join-code" placeholder="Enter 6-digit code" maxlength="6" autocomplete="off" />
+                    <button type="submit">Join Game</button>
+                </form>
+                <div class="features-list">
+                    <div class="feature-item"><span class="checkmark">✔</span> AI generates 10 questions on any topic</div>
+                    <div class="feature-item"><span class="checkmark">✔</span> Three difficulty levels</div>
+                    <div class="feature-item"><span class="checkmark">✔</span> Real-time scoring</div>
+                    <div class="feature-item"><span class="checkmark">✔</span> Multiplayer support</div>
+                </div>
+            </div>
         </section>
-
-        <!-- Player Section -->
-        <section class="card">
-            <h3>Join a Quiz</h3>
-            <input type="text" id="join-code" placeholder="Enter 6-digit code" maxlength="6">
-            <button onclick="joinQuiz()">Join Game</button>
-        </section>
-
-        <!-- Features List -->
-        <section>
-            <h3>Features</h3>
-            <ul>
-                <li>AI generates 10 questions on any topic</li>
-                <li>Three difficulty levels</li>
-                <li>Real-time scoring</li>
-                <li>Multiplayer support</li>
-            </ul>
-        </section>
+        <div class="dots3">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div>
+        </div>
     </main>
-
-    <script src="/static/js/api.js"></script>
-    <script src="/static/js/auth.js"></script>
+    <script>
+        function joinQuiz(e) {
+            if (e) e.preventDefault();
+            const joinCode = document.getElementById('join-code').value.trim().toUpperCase();
+            if (!joinCode) {
+                alert('Please enter a join code');
+                return;
+            }
+            if (joinCode.length !== 6) {
+                alert('Join code must be 6 characters');
+                return;
+            }
+            localStorage.setItem('pendingJoinCode', joinCode);
+            window.location.href = '/join-game/';
+        }
+        window.addEventListener('load', () => {
+            const pendingCode = localStorage.getItem('pendingJoinCode');
+            if (pendingCode && window.location.pathname.includes('/join-game/')) {
+                document.getElementById('join-code').value = pendingCode;
+                localStorage.removeItem('pendingJoinCode');
+            }
+        });
+    </script>
 </body>
 </html>
-
-<script>
-    // Handle join quiz from homepage
-    function joinQuiz() {
-        const joinCode = document.getElementById('join-code').value.trim().toUpperCase();
-
-        if (!joinCode) {
-            alert('Please enter a join code');
-            return;
-        }
-
-        if (joinCode.length !== 6) {
-            alert('Join code must be 6 characters');
-            return;
-        }
-
-        // Store code and redirect to join page
-        localStorage.setItem('pendingJoinCode', joinCode);
-        window.location.href = '/join-game/';
-    }
-
-    // Check if there's a pending join code
-    window.addEventListener('load', () => {
-        const pendingCode = localStorage.getItem('pendingJoinCode');
-        if (pendingCode && window.location.pathname.includes('/join-game/')) {
-            document.getElementById('join-code').value = pendingCode;
-            localStorage.removeItem('pendingJoinCode');
-        }
-    });
-</script>
