@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from .models import User
 from .serializers import UserSerializer
+from django.middleware.csrf import get_token
+from django.http import JsonResponse
 
 
 @api_view(['POST'])
@@ -92,3 +94,9 @@ def current_user(request):
             {'error': 'Not authenticated'},
             status=status.HTTP_401_UNAUTHORIZED
         )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_csrf_token(request):
+    """Get CSRF token"""
+    return JsonResponse({'csrfToken': get_token(request)})

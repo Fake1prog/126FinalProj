@@ -116,7 +116,27 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:8080",
+    "http://localhost:63342",  # PyCharm
+    "http://127.0.0.1:63342",  # PyCharm
+    "http://localhost:5500",   # VS Code Live Server
+    "http://127.0.0.1:5500",   # VS Code Live Server
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:63342",      # PyCharm's server
+    "http://127.0.0.1:63342",      # PyCharm's server
+    "http://localhost:3000",
+    "http://localhost:8080",
+    "http://localhost:5500",       # VS Code Live Server
+]
+
+# Also ensure these are set
+CSRF_COOKIE_SAMESITE = 'Lax'  # Changed from None
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+
+# For development, you can also add this
+CSRF_COOKIE_DOMAIN = None
 
 CORS_ALLOW_CREDENTIALS = True
 
