@@ -1,0 +1,157 @@
+/* Basic functional styles - your designer will replace these */
+body {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.card {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.form-group {
+    margin: 15px 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.code {
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    background: #f0f0f0;
+    padding: 10px;
+}
+
+.answer-btn {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 15px;
+    text-align: left;
+}
+
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #333;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Auth forms */
+.auth-form {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 30px;
+    background: #f9f9f9;
+    border-radius: 10px;
+}
+
+.auth-form h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Dashboard */
+.quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.quiz-card {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: #e3f2fd;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Join form */
+.join-form {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 40px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.join-form input[type="text"] {
+    text-align: center;
+    font-size: 24px;
+    letter-spacing: 2px;
+}
+
+/* Results */
+.leaderboard-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f5f5f5;
+    border-radius: 5px;
+}
+
+.leaderboard-item.current-player {
+    background: #e3f2fd;
+    border: 2px solid #2196f3;
+}
+
+.rank {
+    font-weight: bold;
+    color: #666;
+}
+
+.score {
+    font-weight: bold;
+    color: #4caf50;
+}
