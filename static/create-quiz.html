@@ -267,13 +267,17 @@
 
                 if (response.ok) {
                     showNotification(
-                        `Quiz "${data.title}" created successfully! Join code: ${data.join_code}`,
+                        `Quiz "${data.title}" created successfully!`,
                         'success'
                     );
 
+                    // Store quiz data for the success page
+                    localStorage.setItem('newQuizData', JSON.stringify(data));
+
+                    // Redirect to quiz created page
                     setTimeout(() => {
-                        window.location.href = '/dashboard/';
-                    }, 2000);
+                        window.location.href = '/quiz-created/';
+                    }, 1000);
 
                 } else {
                     const errorMessage = data.error || 'Failed to create quiz. Please try again.';
