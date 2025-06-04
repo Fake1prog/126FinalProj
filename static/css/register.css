@@ -1,0 +1,233 @@
+/* Register Page Styles */
+:root {
+    --primary-color: #6C63FF;
+    --text-color: #1A1A1A;
+    --background: #FAFAFB;
+    --card-background: #FFFFFF;
+    --input-background: #F8F8F8;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    font-family: 'Display', sans-serif;
+    background: var(--background);
+    
+}
+
+.split-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.image-section {
+    flex: 1;
+    background: #F5F5FF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.image-section img {
+    max-width: 100%;
+    max-height: 90%;
+}
+
+.form-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: url('/static/images/Register.png') no-repeat center center;
+    background-size: cover;
+    position: relative;
+}
+
+.form-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.92);
+    z-index: 1;
+}
+
+main {
+    width: 100%;
+    max-width: 450px;
+    position: relative;
+    z-index: 2;
+}
+
+h2 {
+    color: #170F49;
+    font-size: 1.75rem;
+    margin: 0;
+    text-align: center;
+}
+
+.subtitle {
+    color: #6F6C90;
+    text-align: center;
+    margin: 1rem 0 2rem 0;
+    font-size: 0.95rem;
+}
+
+.auth-form {
+    background: var(--card-background);
+    padding: 2.5rem;
+    border-radius: 35px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #170F49;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #E0E0E0;
+    border-radius: 86px;
+    background: var(--input-background);
+    font-size: 1rem;
+    font-family: 'Display', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+button[type="submit"] {
+    width: 100%;
+    padding: 1rem;
+    background: #4A3AFF;
+    color: white;
+    border: none;
+    border-radius: 85px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Display', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 1rem;
+}
+
+button[type="submit"]:hover {
+    background: #5850E6;
+}
+
+.auth-form p {
+    text-align: center;
+    color: #666;
+    margin: 1.5rem 0 0 0;
+    font-size: 0.9rem;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+nav {
+    display: block;
+    position: fixed; 
+    top: 3rem;  
+    left: 3rem;  
+}
+
+nav a.back-button:hover img {
+    filter: brightness(85%);
+}
+
+@media screen and (max-width: 768px) {
+    .split-container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .image-section {
+        flex: none;
+        height: 300px;
+        padding: 1rem;
+    }
+
+    .image-section img {
+        max-height: 100%;
+        width: auto;
+        object-fit: contain;
+    }
+
+    .form-section {
+        flex: none;
+        padding: 1.5rem;
+        background-attachment: scroll;
+    }
+
+    .form-section::before {
+        background: rgba(255, 255, 255, 0.95);
+    }
+
+    main {
+        padding: 0;
+    }
+
+    .auth-form {
+        padding: 1.5rem;
+    }
+
+    nav {
+        top: 1rem;
+        left: 1rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .image-section {
+        height: 200px;
+    }
+
+    .auth-form {
+        padding: 1.25rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .form-group input {
+        padding: 0.875rem;
+    }
+} 
