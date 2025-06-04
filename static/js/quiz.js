@@ -56,51 +56,55 @@ class QuizManager {
 
   async loadMyQuizzes() {
     try {
-      const response = await api.getMyQuizzes();
-      console.log("API Response:", response);
-      const container = document.getElementById("my-quizzes");
+        const response = await api.getMyQuizzes();
+        console.log("API Response:", response);
+        const container = document.getElementById("my-quizzes");
 
-      const quizzes = response.results || [];
+        const quizzes = response.results || [];
 
-      // Update total quizzes count
-      document.getElementById("total-quizzes").textContent = quizzes.length;
+        // Update total quizzes count
+        document.getElementById("total-quizzes").textContent = quizzes.length;
 
-      // Count total players across all quizzes (assumes each quiz has a player_count field)
-      let totalPlayers = 0;
-      for (const quiz of quizzes) {
-        totalPlayers += quiz.player_count || 0;
-      }
+        // Count total players across all quizzes (assumes each quiz has a player_count field)
+        let totalPlayers = 0;
+        for (const quiz of quizzes) {
+            totalPlayers += quiz.player_count || 0;
+        }
 
-      // Update total players count
-      document.getElementById("total-players").textContent = totalPlayers;
+        // Update total players count (guarded)
+        const totalPlayersElem = document.getElementById("total-players");
+        if (totalPlayersElem) {
+            totalPlayersElem.textContent = totalPlayers;
+        }
 
-      if (quizzes.length === 0) {
-        container.innerHTML = "<p>No quizzes created yet.</p>";
-        return;
-      }
+        if (quizzes.length === 0) {
+            container.innerHTML = "<p>No quizzes created yet.</p>";
+            return;
+        }
 
-      container.innerHTML = quizzes
-        .map(
-          (quiz) => `
-            <div class="quiz-card">
-                <h3>${quiz.title}</h3>
-                <p>Topic: ${quiz.topic}</p>
-                <p>Difficulty: ${quiz.difficulty}</p>
-                <p>Join Code: <strong>${quiz.join_code}</strong></p>
-                <p>Created: ${new Date(
-                  quiz.created_at
-                ).toLocaleDateString()}</p>
-            </div>
-        `
-        )
-        .join("");
+        container.innerHTML = quizzes
+            .map(
+                (quiz) => `
+                <div class="quiz-card">
+                    <h3>${quiz.title}</h3>
+                    <p>Topic: ${quiz.topic}</p>
+                    <p>Difficulty: ${quiz.difficulty}</p>
+                    <p>Join Code: <strong>${quiz.join_code}</strong></p>
+                    <p>Created: ${new Date(
+                    quiz.created_at
+                    ).toLocaleDateString()}</p>
+                </div>
+            `
+            )
+            .join("");
     } catch (error) {
-      console.error("Error loading quizzes:", error);
-      const container = document.getElementById("my-quizzes");
-      container.innerHTML =
-        "<p>Failed to load quizzes. Please try again later.</p>";
+        console.error("Error loading quizzes:", error);
+        const container = document.getElementById("my-quizzes");
+        container.innerHTML =
+            "<p>Failed to load quizzes. Please try again later.</p>";
     }
-  }
+}
+
 
   hostQuiz(quizId, joinCode) {
     localStorage.setItem("currentQuizId", quizId);
