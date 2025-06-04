@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Game - Quiz Show Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html">← Back</a>
+        <h1>Join a Quiz</h1>
+    </nav>
+
+    <main>
+        <form id="join-form" class="join-form">
+            <h2>Enter Game Details</h2>
+
+            <div class="form-group">
+                <label for="join-code">Join Code:</label>
+                <input type="text" id="join-code" required
+                       maxlength="6"
+                       placeholder="ABC123"
+                       style="text-transform: uppercase;">
+            </div>
+
+            <div class="form-group">
+                <label for="nickname">Your Nickname:</label>
+                <input type="text" id="nickname" required
+                       maxlength="20"
+                       placeholder="Enter your name">
+            </div>
+
+            <button type="submit">Join Game</button>
+        </form>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Handle join form
+        document.getElementById('join-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const joinCode = document.getElementById('join-code').value.toUpperCase();
+            const nickname = document.getElementById('nickname').value;
+
+            try {
+                const response = await api.joinQuiz(joinCode, nickname);
+
+                if (response.player && response.session) {
+                    // Store player data
+                    localStorage.setItem('playerData', JSON.stringify(response));
+
+                    // Redirect to game
+                    window.location.href = 'play-game.html';
+                } else {
+                    alert('Error: ' + (response.error || 'Failed to join game'));
+                }
+            } catch (error) {
+                alert('Error joining game: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
