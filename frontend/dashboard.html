@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - Quiz Show Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html">← Home</a>
+        <h1>My Dashboard</h1>
+        <div id="user-info">
+            <span id="username"></span>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <main>
+        <section>
+            <h2>My Quizzes</h2>
+            <button onclick="window.location.href='create-quiz.html'" class="primary-btn">
+                Create New Quiz
+            </button>
+
+            <div id="my-quizzes" class="quiz-grid">
+                <!-- Quizzes will be loaded here -->
+                <p>Loading your quizzes...</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Quizzes</h3>
+                    <p id="total-quizzes">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Players</h3>
+                    <p id="total-players">0</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/quiz.js"></script>
+</body>
+</html>

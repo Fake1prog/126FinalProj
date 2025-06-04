@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Show Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <h1>Quiz Show Platform</h1>
+        <div id="nav-links">
+            <a href="login.html">Login</a>
+            <a href="register.html">Register</a>
+        </div>
+        <div id="user-info" style="display:none;">
+            <span id="username"></span>
+            <button onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <main>
+        <h2>Welcome to AI-Powered Quiz Show!</h2>
+
+        <!-- Host Section -->
+        <section class="card">
+            <h3>Host a Quiz</h3>
+            <p>Create AI-generated quizzes instantly</p>
+            <button onclick="window.location.href='create-quiz.html'">Create New Quiz</button>
+            <button onclick="window.location.href='dashboard.html'">My Quizzes</button>
+        </section>
+
+        <!-- Player Section -->
+        <section class="card">
+            <h3>Join a Quiz</h3>
+            <input type="text" id="join-code" placeholder="Enter 6-digit code" maxlength="6">
+            <button onclick="joinQuiz()">Join Game</button>
+        </section>
+
+        <!-- Features List -->
+        <section>
+            <h3>Features</h3>
+            <ul>
+                <li>AI generates 10 questions on any topic</li>
+                <li>Three difficulty levels</li>
+                <li>Real-time scoring</li>
+                <li>Multiplayer support</li>
+            </ul>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
+
+<script>
+    // Handle join quiz from homepage
+    function joinQuiz() {
+        const joinCode = document.getElementById('join-code').value.trim().toUpperCase();
+
+        if (!joinCode) {
+            alert('Please enter a join code');
+            return;
+        }
+
+        if (joinCode.length !== 6) {
+            alert('Join code must be 6 characters');
+            return;
+        }
+
+        // Store code and redirect to join page
+        localStorage.setItem('pendingJoinCode', joinCode);
+        window.location.href = 'join-game.html';
+    }
+
+    // Check if there's a pending join code
+    window.addEventListener('load', () => {
+        const pendingCode = localStorage.getItem('pendingJoinCode');
+        if (pendingCode && window.location.pathname.includes('join-game.html')) {
+            document.getElementById('join-code').value = pendingCode;
+            localStorage.removeItem('pendingJoinCode');
+        }
+    });
+</script>

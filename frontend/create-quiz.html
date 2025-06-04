@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Quiz - Quiz Show Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html">← Back</a>
+        <h1>Create New Quiz</h1>
+    </nav>
+
+    <main>
+        <form id="create-quiz-form">
+            <!-- Quiz Title -->
+            <div class="form-group">
+                <label>Quiz Title:</label>
+                <input type="text" id="title" required
+                       placeholder="e.g., Ancient Egypt Trivia">
+            </div>
+
+            <!-- Topic for AI -->
+            <div class="form-group">
+                <label>Topic (AI will generate questions about this):</label>
+                <input type="text" id="topic" required
+                       placeholder="e.g., Ancient Egypt, Space Exploration, etc.">
+            </div>
+
+            <!-- Difficulty -->
+            <div class="form-group">
+                <label>Difficulty:</label>
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit">Generate Quiz with AI</button>
+        </form>
+
+        <!-- Loading State -->
+        <div id="loading" style="display:none;">
+            <p>🤖 AI is generating your questions...</p>
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Success State -->
+        <div id="success" style="display:none;">
+            <h3>Quiz Created!</h3>
+            <p>Join Code: <span id="join-code" class="code"></span></p>
+            <button onclick="startHosting()">Start Hosting</button>
+            <button onclick="copyCode()">Copy Code</button>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/quiz.js"></script>
+</body>
+</html>
