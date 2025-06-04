@@ -5,6 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Play Quiz - Quiz Show Platform</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+             min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+            font-family: 'Display', sans-serif;
+            background: 
+    url('./images/dash_bg.png'); /* Replace with your actual image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+        }
+
+        main {
+            height: auto;
+            width: 800px;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(74, 58, 255, 0.08);
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #4a3aff00;
+            color: #4a3aff;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .center {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        #waiting {
+            background: #e8edff;
+            color: #4A3AFF;
+            border-radius: 8px;
+            padding: 2rem 1rem;
+            margin-bottom: 2rem;
+        }
+
+        #question-display {
+            background: #4A3AFF;
+            color: #fff;
+            border-radius: 10px;
+            padding: 2rem 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        #question-text {
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        #answer-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .answer-btn {
+            background: #fff;
+            color: #4A3AFF;
+            border: 2px solid #4A3AFF;
+            border-radius: 6px;
+            padding: 0.8rem 1rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .answer-btn:hover, .answer-btn:focus {
+            background: #e8edff;
+            color: #2a1a9e;
+        }
+
+        .timer {
+            font-size: 1.1rem;
+            background: #fff;
+            color: #4A3AFF;
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            margin-top: 1rem;
+        }
+
+        #feedback {
+            background: #e8edff;
+            color: #4A3AFF;
+            border-radius: 8px;
+            padding: 2rem 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        #final-results {
+            background: #4A3AFF;
+            color: #fff;
+            border-radius: 10px;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        #final-results button {
+            background: #fff;
+            color: #4A3AFF;
+            border: none;
+            border-radius: 5px;
+            padding: 0.7rem 1.5rem;
+            font-size: 1.1rem;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        #final-results button:hover {
+            background: #e8edff;
+            color: #2a1a9e;
+        }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            main {
+                padding: 1rem;
+            }
+            header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <main>

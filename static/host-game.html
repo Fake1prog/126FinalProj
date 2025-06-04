@@ -1,61 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Host Game - Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz Lobby</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Display', sans-serif;
+        background: 
+    url('./images/dash_bg.png'); /* Replace with your actual image path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quiz-card {
+        gap: 4em;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 6px 32px rgba(74, 58, 255, 0.10);
+      padding: 2rem 5rem 2rem 5rem;
+      min-width: 700px;
+      max-width: 1000px;
+      min-height: 380px;
+      position: relative;
+    }
+
+    .quiz-icon {
+      flex: 0 0 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 2.5rem;
+    }
+
+    .quiz-icon img {
+      width: 500px;
+      max-width: 150%;
+      height: auto;
+      object-fit: contain;
+      border-radius: 16px;
+      /* Removed box-shadow */
+    }
+
+    .quiz-content {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .quiz-title {
+      font-size: 2.1rem;
+      font-weight: 700;
+      margin: 0 0 1.2rem 0;
+      color: #222;
+    }
+
+    .quiz-info-row {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      font-size: 1.15rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .quiz-info-row span {
+      color: #393a6c;
+    }
+
+    .quiz-info-row strong {
+      font-weight: 700;
+      color: #4A3AFF;
+    }
+
+    .waiting-text {
+      color: #8a8bb3;
+      font-size: 1.1rem;
+      margin-bottom: 2.2rem;
+    }
+
+    .generate-btn {
+      background: #4A3AFF;
+      color: #fff;
+      border: none;
+      border-radius: 28px;
+      padding: 1.1rem 2.2rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(74, 58, 255, 0.08);
+      cursor: pointer;
+      transition: background 0.18s;
+      margin-bottom: 1rem;
+      width: 100%; /* Match width with leaderboard */
+    }
+
+    .generate-btn:hover {
+      background: #2a1a9e;
+    }
+
+    .leaderboard-box {
+      background: #f5f7ff;
+      border-radius: 16px;
+      padding: 1.2rem;
+      min-height: 80px;
+      color: #4A3AFF;
+      font-size: 1.1rem;
+      box-shadow: 0 1px 4px rgba(74, 58, 255, 30);
+      width: 100%; /* Match width with button */
+    }
+
+    @media (max-width: 900px) {
+      .quiz-card {
+        flex-direction: column;
+        align-items: center;
+        min-width: 320px;
+        max-width: 98vw;
+        padding: 1.2rem;
+      }
+
+      .quiz-icon {
+        margin: 0 0 1.5rem 0;
+      }
+    }
+  </style>
 </head>
 <body>
-    <main>
-        <!-- Game Info -->
-        <header>
-            <h1 id="quiz-title">Quiz Title</h1>
-            <div class="game-info">
-                <span>Join Code: <strong id="join-code">ABC123</strong></span>
-                <span>Players: <strong id="player-count">0</strong></span>
-            </div>
-        </header>
-
-        <!-- Waiting Room -->
-        <section id="waiting-room">
-            <h2>Waiting for Players...</h2>
-            <div id="player-list">
-                <!-- Players will appear here -->
-            </div>
-            <button onclick="startGame()" disabled id="start-btn">
-                Start Game (Need at least 1 player)
-            </button>
-        </section>
-
-        <!-- Game Controls -->
-        <section id="game-controls" style="display:none;">
-            <div class="question-display">
-                <h3>Question <span id="question-number">1</span> of 10</h3>
-                <p id="question-text">Question will appear here</p>
-                <div id="answers">
-                    <!-- Answer options -->
-                </div>
-            </div>
-
-            <div class="timer">
-                Time Remaining: <span id="timer">20</span>s
-            </div>
-
-            <button onclick="showResults()">Show Results</button>
-            <button onclick="nextQuestion()">Next Question</button>
-        </section>
-
-        <!-- Live Leaderboard -->
-        <section id="leaderboard">
-            <h3>Leaderboard</h3>
-            <div id="scores">
-                <!-- Live scores -->
-            </div>
-        </section>
-    </main>
-
-    <script src="/static/js/api.js"></script>
-    <script src="/static/js/game.js"></script>
+  <div class="quiz-card">
+    <div class="quiz-icon">
+      <img src="./images/questionmarks.png" alt="Quiz Icon">
+    </div>
+    <div class="quiz-content">
+      <div class="quiz-title">Quiz Title</div>
+      <div class="quiz-info-row">
+        <span>Join Code: <strong>ABC123</strong></span>
+        <span>Players: <strong>0</strong></span>
+      </div>
+      <div class="waiting-text">Waiting for Players...</div>
+      <button class="generate-btn">Start Game (Need at least 1 player)</button>
+      <div class="leaderboard-box">Leaderboard</div>
+    </div>
+  </div>
 </body>
 </html>
