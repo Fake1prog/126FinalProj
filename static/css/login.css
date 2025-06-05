@@ -137,6 +137,19 @@ nav {
     left: 3rem;  
 }
 
-nav a.back-button:hover img {
-    filter: brightness(85%);  /* Slight darken on hover */
+/* Base back‐icon */
+nav a.back-button .icon-back {
+  display: block;
+  width: 32px;
+  height: 32px;
+  color: var(--primary-color);          /* #6C63FF */
+  transition: transform 0.2s ease, color 0.2s ease, filter 0.2s ease;
+}
+
+/* Hover: scale up + violet glow */
+nav a.back-button:hover .icon-back {
+  transform: scale(1.2);
+  color: var(--primary-color);          /* stays violet */
+  /* add a soft violet glow */
+  filter: drop-shadow(0 0 5px rgba(108, 99, 255, 0.7));
 }
