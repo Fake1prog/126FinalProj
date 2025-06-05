@@ -1166,6 +1166,226 @@
                 gameManager.cleanup();
             }
         });
+
+        // Game polling system - checks for game state updates every 3 seconds
+        let gameStateInterval = null;
+        let currentSessionId = null;
+
+        // Get session ID from URL or page data
+        function getSessionId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('session') || urlParams.get('sessionId') || window.SESSION_ID;
+        }
+
+        // Start polling for game state changes
+        function startGamePolling() {
+            currentSessionId = getSessionId();
+
+            if (!currentSessionId) {
+                console.error('No session ID found! Cannot poll for game state.');
+                return;
+            }
+
+            console.log(`Starting game state polling for session ${currentSessionId}`);
+
+            // Poll every 3 seconds
+            gameStateInterval = setInterval(checkGameState, 3000);
+
+            // Check immediately
+            checkGameState();
+        }
+
+        // Check current game state
+        async function checkGameState() {
+            try {
+                console.log(`Polling game state for session ${currentSessionId}...`);
+
+                // Try to get session info
+                const response = await fetch(`/api/sessions/${currentSessionId}/`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const sessionData = await response.json();
+                console.log('Session data received:', sessionData);
+
+                handleGameStateUpdate(sessionData);
+
+            } catch (error) {
+                console.error('Error checking game state:', error);
+
+                // Try alternative endpoint
+                await checkCurrentQuestion();
+            }
+        }
+
+        // Try alternative endpoint for current question
+        async function checkCurrentQuestion() {
+            try {
+                const response = await fetch(`/api/sessions/${currentSessionId}/current_question/`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Current question data:', data);
+                    handleGameStateUpdate(data);
+                }
+            } catch (error) {
+                console.error('Error getting current question:', error);
+            }
+        }
+
+        // Handle game state updates
+        function handleGameStateUpdate(data) {
+            const status = data.status;
+
+            if (status === 'waiting') {
+                showWaitingState();
+            } else if (status === 'active' && data.current_question) {
+                showQuestion(data.current_question);
+            } else if (status === 'active' && data.question) {
+                showQuestion(data.question);
+            } else if (status === 'finished') {
+                showGameFinished();
+            }
+        }
+
+        // Show waiting state
+        function showWaitingState() {
+            console.log('Game is waiting to start...');
+
+            // Show waiting message
+            const waitingDiv = document.querySelector('.waiting-state') || document.querySelector('[data-state="waiting"]');
+            if (waitingDiv) {
+                waitingDiv.style.display = 'block';
+            }
+
+            // Hide question if visible
+            const questionDiv = document.querySelector('.question-container') || document.querySelector('[data-state="question"]');
+            if (questionDiv) {
+                questionDiv.style.display = 'none';
+            }
+        }
+
+        // Show question
+        function showQuestion(questionData) {
+            console.log('Showing question:', questionData.question_text);
+
+            // Stop polling when question appears (host will control transitions)
+            if (gameStateInterval) {
+                clearInterval(gameStateInterval);
+                gameStateInterval = null;
+            }
+
+            // Hide waiting state
+            const waitingDiv = document.querySelector('.waiting-state') || document.querySelector('[data-state="waiting"]');
+            if (waitingDiv) {
+                waitingDiv.style.display = 'none';
+            }
+
+            // Show question container
+            const questionDiv = document.querySelector('.question-container') || document.querySelector('[data-state="question"]');
+            if (questionDiv) {
+                questionDiv.style.display = 'block';
+            }
+
+            // Update question text
+            const questionText = document.querySelector('.question-text') || document.querySelector('[data-element="question"]');
+            if (questionText) {
+                questionText.textContent = questionData.question_text;
+            }
+
+            // Update answer options
+            updateAnswerOptions(questionData);
+        }
+
+        // Update answer options
+        function updateAnswerOptions(questionData) {
+            // Combine correct and wrong answers, then shuffle
+            const allAnswers = [questionData.correct_answer, ...questionData.wrong_answers];
+            const shuffledAnswers = shuffleArray([...allAnswers]);
+
+            // Find answer container
+            const answerContainer = document.querySelector('.answers-container') ||
+                                   document.querySelector('[data-element="answers"]') ||
+                                   document.querySelector('.answer-options');
+
+            if (answerContainer) {
+                answerContainer.innerHTML = '';
+
+                shuffledAnswers.forEach((answer, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'answer-option btn btn-outline-primary';
+                    button.textContent = answer;
+                    button.onclick = () => selectAnswer(answer);
+                    answerContainer.appendChild(button);
+                });
+            } else {
+                console.warn('Answer container not found in DOM');
+            }
+        }
+
+        // Shuffle array
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Handle answer selection
+        function selectAnswer(selectedAnswer) {
+            console.log('Answer selected:', selectedAnswer);
+
+            // Disable all answer buttons
+            const answerButtons = document.querySelectorAll('.answer-option');
+            answerButtons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === selectedAnswer) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        // Show game finished
+        function showGameFinished() {
+            console.log('Game finished!');
+
+            // Stop polling
+            if (gameStateInterval) {
+                clearInterval(gameStateInterval);
+                gameStateInterval = null;
+            }
+
+            // Redirect to results or show final message
+            setTimeout(() => {
+                window.location.href = '/results/';
+            }, 2000);
+        }
+
+        // Start polling when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, starting game polling...');
+            startGamePolling();
+        });
+
+        // Debug: Make functions available globally
+        window.gameDebug = {
+            startPolling: startGamePolling,
+            checkGameState: checkGameState,
+            sessionId: () => currentSessionId
+        };
     </script>
 </body>
 </html>

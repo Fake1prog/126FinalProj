@@ -469,6 +469,81 @@ class PlayerViewSet(viewsets.ModelViewSet):
             'quiz_title': player.session.quiz.title
         })
 
+    # ADD THESE FUNCTIONS TO THE END OF YOUR quiz_api/views.py FILE
+
+    @api_view(['GET'])
+    def user_quizzes(request):
+        """Get current user's quizzes - Fixed function"""
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Authentication required'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        quizzes = Quiz.objects.filter(host=request.user).order_by('-created_at')
+        serializer = QuizSerializer(quizzes, many=True)
+
+        logger.info(f"User {request.user.username} requested {quizzes.count()} quizzes")
+
+        return Response({
+            'results': serializer.data,
+            'count': quizzes.count()
+        })
+
+    @api_view(['GET'])
+    def get_current_question(request, pk):
+        """Get current question for a session - Fixed function"""
+        try:
+            session = GameSession.objects.get(pk=pk)
+            logger.info(f"Getting current question for session {session.id}, status: {session.status}")
+
+            if session.status == 'waiting':
+                return Response({
+                    'session_id': session.id,
+                    'status': 'waiting',
+                    'message': 'Game has not started yet'
+                })
+
+            if session.status == 'finished':
+                return Response({
+                    'session_id': session.id,
+                    'status': 'finished',
+                    'message': 'Game has ended'
+                })
+
+            # Get current question
+            questions = session.quiz.questions.all().order_by('order')
+            total_questions = questions.count()
+
+            if session.current_question_index < total_questions:
+                current_question = questions[session.current_question_index]
+
+                return Response({
+                    'session_id': session.id,
+                    'question': QuestionSerializer(current_question).data,
+                    'question_number': session.current_question_index + 1,
+                    'total_questions': total_questions,
+                    'status': session.status
+                })
+            else:
+                # Quiz completed
+                session.status = 'finished'
+                session.ended_at = timezone.now()
+                session.save()
+
+                return Response({
+                    'session_id': session.id,
+                    'status': 'finished',
+                    'message': 'Quiz completed'
+                })
+
+        except GameSession.DoesNotExist:
+            logger.error(f"Session {pk} not found")
+            return Response(
+                {'error': 'Session not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 # Add test endpoint for debugging
 from django.http import JsonResponse
@@ -513,3 +588,4 @@ def test_ai_service(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
