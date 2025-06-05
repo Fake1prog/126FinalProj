@@ -1,390 +1,392 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Create New Quiz</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: url("/static/images/dash_bg.png") center/cover no-repeat;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: flex-start;
-            padding: 0;
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: url("/static/images/dash_bg.png") center/cover no-repeat;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 0;
+      }
+
+      nav {
+        margin: 0 auto;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 2rem 0 1rem 2rem;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      nav h2 {
+        font-size: 2rem;
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -1px;
+        color: #22223b;
+      }
+
+      nav a {
+        text-decoration: none;
+        font-size: 2rem;
+        color: #22223b;
+        font-weight: 500;
+        transition: color 0.2s;
+        margin-right: 1rem;
+      }
+
+      nav a:hover {
+        color: #4a3aff;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        width: 90%;
+        max-width: 900px;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        justify-content: center;
+      }
+
+      .container a {
+        text-decoration: none;
+        font-size: 3rem;
+        font-weight: 500;
+        margin-left: 1.75rem;
+        color: black;
+      }
+
+      .container a:hover {
+        color: #4a3aff;
+      }
+
+      .quiz-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .left-section {
+        flex: 1;
+        text-align: center;
+      }
+
+      .quiz-illustration {
+        width: 400px;
+        height: 400px;
+        background: url("/static/images/questionmarks.png") center/contain
+          no-repeat;
+        margin: 0 auto;
+      }
+
+      .right-section {
+        flex: 1;
+      }
+
+      h1 {
+        color: #1f2937;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 40px;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 16px 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 16px;
+        background: #f9fafb;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        height: 56px;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #6366f1;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+
+      .form-group select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 12px center;
+        background-repeat: no-repeat;
+        background-size: 16px;
+      }
+
+      .generate-button {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        border: none;
+        padding: 18px 40px;
+        border-radius: 50px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        width: 100%;
+      }
+
+      .generate-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+      }
+
+      .generate-button:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .notification {
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        display: none;
+      }
+
+      .notification.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .notification.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .loading-spinner {
+        display: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid transparent;
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-
-        nav {
-      margin: 0 auto;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 2rem 0 1rem 2rem;
-      background: transparent;
-      box-shadow: none;
-    }
-
-    nav h2 {
-      font-size: 2rem;
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: -1px;
-      color: #22223b;
-    }
-
-    nav a {
-      text-decoration: none;
-      font-size: 2rem;
-      color: #22223b;
-      font-weight: 500;
-      transition: color 0.2s;
-      margin-right: 1rem;
-    }
-
-    nav a:hover {
-      color: #4A3AFF;
-    }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 30px;
-            width: 90%;
-            max-width: 900px;
-            display: flex;
-            flex-direction: column;
-            gap: 0px;
-            position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    justify-content: center;
+        100% {
+          transform: rotate(360deg);
         }
-
-        .container a {
-            text-decoration: none;
-            font-size: 3rem;
-            font-weight: 500;
-            margin-left: 1.75rem;
-            color: black;
-        }
-
-        .container a:hover {
-            color: #4a3aff;
-        }
-
-        .quiz-container {
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .left-section {
-            flex: 1;
-            text-align: center;
-        }
-
-        .quiz-illustration {
-            width: 400px;
-            height: 400px;
-            background: url("/static/images/questionmarks.png") center/contain no-repeat;
-            margin: 0 auto;
-        }
-
-        .right-section {
-            flex: 1;
-        }
-
-        h1 {
-            color: #1f2937;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 40px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 16px;
-            background: #f9fafb;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-            height: 56px;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #6366f1;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-
-        .form-group select {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 12px center;
-            background-repeat: no-repeat;
-            background-size: 16px;
-        }
-
-        .generate-button {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-            border: none;
-            padding: 18px 40px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
-            width: 100%;
-        }
-
-        .generate-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
-        }
-
-        .generate-button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .notification {
-            padding: 15px 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-weight: 500;
-            display: none;
-        }
-
-        .notification.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .notification.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .loading-spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <nav>
-        <div style="display: flex; align-items: center; gap: 0.7rem;">
-          <a href="/">&#8592;</a>
-          <h2>Create a Quiz</h2>
-        </div>
-      </nav>
+      <div style="display: flex; align-items: center; gap: 0.7rem">
+        <a href="/">&#8592;</a>
+        <h2>Create a Quiz</h2>
+      </div>
+    </nav>
 
     <div class="container">
-        
-
-        <div class="quiz-container">
-            <div class="left-section">
-                <div class="quiz-illustration"></div>
-            </div>
-    
-            <div class="right-section">
-    
-                <div id="notification" class="notification"></div>
-
-                <h2>Enter Quiz Details</h2>
-    
-                <form id="quizForm">
-                    <div class="form-group">
-                        <input
-                            type="text"
-                            id="quizTitle"
-                            name="title"
-                            placeholder="Quiz title..."
-                            required
-                            maxlength="200"
-                        >
-                    </div>
-    
-                    <div class="form-group">
-                        <input
-                            type="text"
-                            id="quizTopic"
-                            name="topic"
-                            placeholder="Topic (AI will generate questions about)"
-                            required
-                            maxlength="100"
-                        >
-                    </div>
-    
-                    <div class="form-group">
-                        <select id="difficulty" name="difficulty" required>
-                            <option value="medium">Medium</option>
-                            <option value="easy">Easy</option>
-                            <option value="hard">Hard</option>
-                        </select>
-                    </div>
-    
-                    <button type="submit" class="generate-button" id="generateButton">
-                        <div class="loading-spinner" id="loadingSpinner"></div>
-                        <span id="buttonText">Generate New Quiz with AI</span>
-                    </button>
-                </form>
-            </div>
+      <div class="quiz-container">
+        <div class="left-section">
+          <div class="quiz-illustration"></div>
         </div>
+
+        <div class="right-section">
+          <div id="notification" class="notification"></div>
+
+          <h2>Enter Quiz Details</h2>
+
+          <form id="quizForm">
+            <div class="form-group">
+              <input
+                type="text"
+                id="quizTitle"
+                name="title"
+                placeholder="Quiz title..."
+                required
+                maxlength="200"
+              />
+            </div>
+
+            <div class="form-group">
+              <input
+                type="text"
+                id="quizTopic"
+                name="topic"
+                placeholder="Topic (AI will generate questions about)"
+                required
+                maxlength="100"
+              />
+            </div>
+
+            <div class="form-group">
+              <select id="difficulty" name="difficulty" required>
+                <option value="medium">Medium</option>
+                <option value="easy">Easy</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+
+            <button type="submit" class="generate-button" id="generateButton">
+              <div class="loading-spinner" id="loadingSpinner"></div>
+              <span id="buttonText">Generate New Quiz with AI</span>
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
 
     <script>
-        const API_BASE = '/api';
-        let csrfToken = '';
+      const API_BASE = "/api";
+      let csrfToken = "";
 
-        const quizForm = document.getElementById('quizForm');
-        const generateButton = document.getElementById('generateButton');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const buttonText = document.getElementById('buttonText');
-        const notification = document.getElementById('notification');
+      const quizForm = document.getElementById("quizForm");
+      const generateButton = document.getElementById("generateButton");
+      const loadingSpinner = document.getElementById("loadingSpinner");
+      const buttonText = document.getElementById("buttonText");
+      const notification = document.getElementById("notification");
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async function() {
-            await fetchCSRFToken();
-            checkAuthentication();
-        });
+      // Initialize
+      document.addEventListener("DOMContentLoaded", async function () {
+        await fetchCSRFToken();
+        checkAuthentication();
+      });
 
-        async function fetchCSRFToken() {
-            try {
-                const response = await fetch(`${API_BASE}/auth/csrf/`);
-                const data = await response.json();
-                csrfToken = data.csrfToken;
-            } catch (error) {
-                console.error('Failed to fetch CSRF token:', error);
-            }
+      async function fetchCSRFToken() {
+        try {
+          const response = await fetch(`${API_BASE}/auth/csrf/`);
+          const data = await response.json();
+          csrfToken = data.csrfToken;
+        } catch (error) {
+          console.error("Failed to fetch CSRF token:", error);
+        }
+      }
+
+      async function checkAuthentication() {
+        try {
+          const response = await fetch(`${API_BASE}/auth/user/`);
+          if (!response.ok) {
+            window.location.href = "/login/";
+          }
+        } catch (error) {
+          window.location.href = "/login/";
+        }
+      }
+
+      quizForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const title = document.getElementById("quizTitle").value.trim();
+        const topic = document.getElementById("quizTopic").value.trim();
+        const difficulty = document.getElementById("difficulty").value;
+
+        if (!title || !topic || !difficulty) {
+          showNotification("Please fill in all fields.", "error");
+          return;
         }
 
-        async function checkAuthentication() {
-            try {
-                const response = await fetch(`${API_BASE}/auth/user/`);
-                if (!response.ok) {
-                    window.location.href = '/login/';
-                }
-            } catch (error) {
-                window.location.href = '/login/';
-            }
+        await createQuizWithAI({ title, topic, difficulty });
+      });
+
+      async function createQuizWithAI(formData) {
+        setLoadingState(true);
+
+        try {
+          const response = await fetch(`${API_BASE}/quizzes/create_with_ai/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+            credentials: "include",
+            body: JSON.stringify(formData),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            showNotification(
+              `Quiz "${data.title}" created successfully!`,
+              "success"
+            );
+
+            // Store quiz data for the success page
+            localStorage.setItem("newQuizData", JSON.stringify(data));
+
+            // Redirect to quiz created page
+            setTimeout(() => {
+              window.location.href = "/quiz-created/";
+            }, 1000);
+          } else {
+            const errorMessage =
+              data.error || "Failed to create quiz. Please try again.";
+            showNotification(errorMessage, "error");
+          }
+        } catch (error) {
+          console.error("Error creating quiz:", error);
+          showNotification("Network error. Please try again.", "error");
+        } finally {
+          setLoadingState(false);
         }
+      }
 
-        quizForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const title = document.getElementById('quizTitle').value.trim();
-            const topic = document.getElementById('quizTopic').value.trim();
-            const difficulty = document.getElementById('difficulty').value;
-
-            if (!title || !topic || !difficulty) {
-                showNotification('Please fill in all fields.', 'error');
-                return;
-            }
-
-            await createQuizWithAI({ title, topic, difficulty });
-        });
-
-        async function createQuizWithAI(formData) {
-            setLoadingState(true);
-
-            try {
-                const response = await fetch(`${API_BASE}/quizzes/create_with_ai/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken,
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showNotification(
-                        `Quiz "${data.title}" created successfully!`,
-                        'success'
-                    );
-
-                    // Store quiz data for the success page
-                    localStorage.setItem('newQuizData', JSON.stringify(data));
-
-                    // Redirect to quiz created page
-                    setTimeout(() => {
-                        window.location.href = '/quiz-created/';
-                    }, 1000);
-
-                } else {
-                    const errorMessage = data.error || 'Failed to create quiz. Please try again.';
-                    showNotification(errorMessage, 'error');
-                }
-
-            } catch (error) {
-                console.error('Error creating quiz:', error);
-                showNotification('Network error. Please try again.', 'error');
-            } finally {
-                setLoadingState(false);
-            }
+      function setLoadingState(isLoading) {
+        if (isLoading) {
+          generateButton.disabled = true;
+          loadingSpinner.style.display = "inline-block";
+          buttonText.textContent = "Generating Quiz...";
+        } else {
+          generateButton.disabled = false;
+          loadingSpinner.style.display = "none";
+          buttonText.textContent = "Generate New Quiz with AI";
         }
+      }
 
-        function setLoadingState(isLoading) {
-            if (isLoading) {
-                generateButton.disabled = true;
-                loadingSpinner.style.display = 'inline-block';
-                buttonText.textContent = 'Generating Quiz...';
-            } else {
-                generateButton.disabled = false;
-                loadingSpinner.style.display = 'none';
-                buttonText.textContent = 'Generate New Quiz with AI';
-            }
+      function showNotification(message, type) {
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = "block";
+
+        if (type === "success") {
+          setTimeout(() => {
+            notification.style.display = "none";
+          }, 5000);
         }
-
-        function showNotification(message, type) {
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.style.display = 'block';
-
-            if (type === 'success') {
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                }, 5000);
-            }
-        }
+      }
     </script>
-</body>
+  </body>
 </html>

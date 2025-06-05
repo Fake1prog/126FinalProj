@@ -1,100 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Results - Quiz Show Platform</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
+  <body>
     <nav>
-        <h1>Quiz Results</h1>
+      <h1>Quiz Results</h1>
     </nav>
 
     <main>
-        <section id="results-container">
-            <h2 id="quiz-title">Quiz Title</h2>
+      <section id="results-container">
+        <h2 id="quiz-title">Quiz Title</h2>
 
-            <div id="leaderboard">
-                <h3>Final Leaderboard</h3>
-                <div id="leaderboard-list">
-                    <!-- Results will be loaded here -->
-                </div>
-            </div>
+        <div id="leaderboard">
+          <h3>Final Leaderboard</h3>
+          <div id="leaderboard-list">
+            <!-- Results will be loaded here -->
+          </div>
+        </div>
 
-            <div id="player-stats" style="display:none;">
-                <h3>Your Performance</h3>
-                <div class="stats">
-                    <p>Score: <span id="your-score">0</span></p>
-                    <p>Correct Answers: <span id="correct-answers">0</span></p>
-                    <p>Wrong Answers: <span id="wrong-answers">0</span></p>
-                </div>
-            </div>
+        <div id="player-stats" style="display: none">
+          <h3>Your Performance</h3>
+          <div class="stats">
+            <p>Score: <span id="your-score">0</span></p>
+            <p>Correct Answers: <span id="correct-answers">0</span></p>
+            <p>Wrong Answers: <span id="wrong-answers">0</span></p>
+          </div>
+        </div>
 
-            <div class="actions">
-                <button onclick="window.location.href='/'">Back to Home</button>
-                <button onclick="playAgain()">Play Again</button>
-            </div>
-        </section>
+        <div class="actions">
+          <button onclick="window.location.href='/'">Back to Home</button>
+          <button onclick="playAgain()">Play Again</button>
+        </div>
+      </section>
     </main>
 
     <script src="/static/js/api.js"></script>
     <script>
-        // Load results when page loads
-        async function loadResults() {
-            const sessionId = localStorage.getItem('sessionId');
-            const playerId = localStorage.getItem('playerId');
+      // Load results when page loads
+      async function loadResults() {
+        const sessionId = localStorage.getItem("sessionId");
+        const playerId = localStorage.getItem("playerId");
 
-            if (!sessionId) {
-                alert('No game session found');
-                window.location.href = '/';
-                return;
+        if (!sessionId) {
+          alert("No game session found");
+          window.location.href = "/";
+          return;
+        }
+
+        try {
+          // Get session leaderboard
+          const response = await fetch(
+            `${API_BASE_URL}/sessions/${sessionId}/leaderboard/`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
             }
+          );
 
-            try {
-                // Get session leaderboard
-                const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/leaderboard/`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+          const data = await response.json();
 
-                const data = await response.json();
-
-                // Display leaderboard
-                const leaderboardList = document.getElementById('leaderboard-list');
-                leaderboardList.innerHTML = data.leaderboard.map((player, idx) => `
-                    <div class="leaderboard-item ${player.id == playerId ? 'current-player' : ''}">
+          // Display leaderboard
+          const leaderboardList = document.getElementById("leaderboard-list");
+          leaderboardList.innerHTML = data.leaderboard
+            .map(
+              (player, idx) => `
+                    <div class="leaderboard-item ${
+                      player.id == playerId ? "current-player" : ""
+                    }">
                         <span class="rank">#${idx + 1}</span>
                         <span class="name">${player.nickname}</span>
                         <span class="score">${player.score} points</span>
                     </div>
-                `).join('');
+                `
+            )
+            .join("");
 
-                // Show player stats if they were a player
-                if (playerId) {
-                    const player = data.leaderboard.find(p => p.id == playerId);
-                    if (player) {
-                        document.getElementById('player-stats').style.display = 'block';
-                        document.getElementById('your-score').textContent = player.score;
-                        document.getElementById('correct-answers').textContent = player.answers_correct;
-                        document.getElementById('wrong-answers').textContent = player.answers_wrong;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading results:', error);
+          // Show player stats if they were a player
+          if (playerId) {
+            const player = data.leaderboard.find((p) => p.id == playerId);
+            if (player) {
+              document.getElementById("player-stats").style.display = "block";
+              document.getElementById("your-score").textContent = player.score;
+              document.getElementById("correct-answers").textContent =
+                player.answers_correct;
+              document.getElementById("wrong-answers").textContent =
+                player.answers_wrong;
             }
+          }
+        } catch (error) {
+          console.error("Error loading results:", error);
         }
+      }
 
-        function playAgain() {
-            // Clear game data
-            localStorage.removeItem('sessionId');
-            localStorage.removeItem('playerId');
-            localStorage.removeItem('playerData');
-            window.location.href = '/';
-        }
+      function playAgain() {
+        // Clear game data
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("playerData");
+        window.location.href = "/";
+      }
 
-        // Load results on page load
-        loadResults();
+      // Load results on page load
+      loadResults();
     </script>
-</body>
+  </body>
 </html>
