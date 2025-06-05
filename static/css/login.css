@@ -51,13 +51,39 @@ h2 {
     font-size: 0.95rem;
 }
 
+
+@keyframes rotateGlow {
+  0% {
+    /* top glow */
+    box-shadow: 0 -4px 10px rgba(102, 94, 253, 0.7);
+  }
+  25% {
+    /* right glow */
+    box-shadow: 4px 0 10px rgba(102, 94, 253, 0.7);
+  }
+  50% {
+    /* bottom glow */
+    box-shadow: 0 4px 10px rgba(102, 94, 253, 0.7);
+  }
+  75% {
+    /* left glow */
+    box-shadow: -4px 0 10px rgba(102, 94, 253, 0.7);
+  }
+  100% {
+    /* back to top */
+    box-shadow: 0 -4px 10px rgba(102, 94, 253, 0.7);
+  }
+}
+
 .auth-form {
-    background: var(--card-background);
-    padding: 2.5rem;
-    border-radius: 35px;
-    box-shadow: 0 4px 10px #6D3AFF;
-    width: 100%;
-    box-sizing: border-box;
+  position: relative;
+  background: var(--card-background);
+  padding: 2.5rem;
+  border-radius: 35px;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: none;
+  animation: rotateGlow 4s linear infinite;
 }
 
 .form-group {
