@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Service Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .success {
+            border-left-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .error {
+            border-left-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .question {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .question h4 {
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .correct-answer {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .wrong-answers {
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6366f1;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Quiz Service Test</h1>
+
+        <form id="test-form">
+            <div class="form-group">
+                <label for="topic">Topic:</label>
+                <input type="text" id="topic" value="Philippines" placeholder="Enter quiz topic..." required>
+            </div>
+
+            <div class="form-group">
+                <label for="difficulty">Difficulty:</label>
+                <select id="difficulty" required>
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+            <button type="submit" id="test-button">🚀 Test AI Question Generation</button>
+        </form>
+
+        <div id="results" style="display: none;"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('test-form');
+        const button = document.getElementById('test-button');
+        const results = document.getElementById('results');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const topic = document.getElementById('topic').value.trim();
+            const difficulty = document.getElementById('difficulty').value;
+
+            if (!topic) {
+                alert('Please enter a topic');
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = '🤖 Generating Questions...';
+
+            results.style.display = 'block';
+            results.innerHTML = '<div class="loading">🤖 AI is thinking... This may take 10-30 seconds.</div>';
+
+            try {
+                const response = await fetch('/api/test-ai/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ topic, difficulty })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displaySuccess(data);
+                } else {
+                    displayError(data.error);
+                }
+
+            } catch (error) {
+                console.error('Test error:', error);
+                displayError('Network error: ' + error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = '🚀 Test AI Question Generation';
+            }
+        });
+
+        function displaySuccess(data) {
+            const isRealAI = !data.questions[0].question.includes('most commonly associated');
+
+            results.innerHTML = `
+                <div class="results success">
+                    <h3>✅ Test Results</h3>
+                    <p><strong>Topic:</strong> ${data.topic}</p>
+                    <p><strong>Difficulty:</strong> ${data.difficulty}</p>
+                    <p><strong>API Key Configured:</strong> ${data.api_key_configured ? '✅ Yes' : '❌ No'}</p>
+                    <p><strong>Model Used:</strong> ${data.model_used}</p>
+                    <p><strong>Questions Generated:</strong> ${data.questions_generated}</p>
+                    <p><strong>Using Real AI:</strong> ${isRealAI ? '✅ Yes (Real AI questions!)' : '⚠️ No (Fallback templates)'}</p>
+
+                    <h4>Generated Questions:</h4>
+                    ${data.questions.map((q, i) => `
+                        <div class="question">
+                            <h4>Question ${i + 1}: ${q.question}</h4>
+                            <div class="correct-answer">✅ Correct: ${q.correct_answer}</div>
+                            <div class="wrong-answers">❌ Wrong: ${q.wrong_answers.join(', ')}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function displayError(error) {
+            results.innerHTML = `
+                <div class="results error">
+                    <h3>❌ Test Failed</h3>
+                    <p><strong>Error:</strong> ${error}</p>
+                    <p><strong>Possible solutions:</strong></p>
+                    <ul>
+                        <li>Check your OpenRouter API key in .env file</li>
+                        <li>Ensure OPENROUTER_API_KEY is set correctly</li>
+                        <li>Check server logs for more details</li>
+                        <li>Verify your OpenRouter account has credits/access</li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

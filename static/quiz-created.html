@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Created!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: url("/static/images/dash_bg.png") center/cover no-repeat;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 60px;
+            width: 90%;
+            max-width: 900px;
+            display: flex;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .left-section {
+            flex: 1;
+            text-align: center;
+        }
+
+        .quiz-illustration {
+            width: 300px;
+            height: 300px;
+            background: url("/static/images/questionmarks.png") center/contain no-repeat;
+            margin: 0 auto;
+        }
+
+        .right-section {
+            flex: 1;
+        }
+
+        h1 {
+            color: #1f2937;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+        }
+
+        .success-message {
+            color: #059669;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .join-code-section {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .join-code-label {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .join-code {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            letter-spacing: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            box-sizing: border-box;
+        }
+
+        .button.primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border-color: #6366f1;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+        }
+
+        .button.secondary {
+            background: white;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+
+        .button.secondary:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .notification {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="quiz-illustration"></div>
+        </div>
+
+        <div class="right-section">
+            <h1>Quiz Created!</h1>
+
+            <div id="notification" class="notification"></div>
+
+            <div class="join-code-section">
+                <div class="join-code-label">Join Code:</div>
+                <div class="join-code" id="joinCode">LOADING...</div>
+            </div>
+
+            <div class="button-group">
+                <button class="button primary" id="startHostingBtn">Start Hosting</button>
+                <button class="button secondary" id="copyCodeBtn">Copy Code</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let quizData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadQuizData();
+            setupEventListeners();
+        });
+
+        function loadQuizData() {
+            // Get quiz data from localStorage (set by create-quiz page)
+            const storedQuizData = localStorage.getItem('newQuizData');
+            if (storedQuizData) {
+                quizData = JSON.parse(storedQuizData);
+                document.getElementById('joinCode').textContent = quizData.join_code;
+
+                // Clear the stored data
+                localStorage.removeItem('newQuizData');
+            } else {
+                // Fallback if no data found
+                document.getElementById('joinCode').textContent = 'ERROR';
+                showNotification('Quiz data not found. Please create a new quiz.', 'error');
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('copyCodeBtn').addEventListener('click', copyJoinCode);
+            document.getElementById('startHostingBtn').addEventListener('click', startHosting);
+        }
+
+        function copyJoinCode() {
+            const joinCode = document.getElementById('joinCode').textContent;
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(joinCode).then(() => {
+                    showNotification('Join code copied to clipboard!', 'success');
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(joinCode);
+                });
+            } else {
+                fallbackCopyTextToClipboard(joinCode);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                showNotification('Join code copied to clipboard!', 'success');
+            } catch (err) {
+                showNotification('Failed to copy join code', 'error');
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        function startHosting() {
+            if (quizData && quizData.id) {
+                // Redirect to host-game page with quiz ID
+                window.location.href = `/host-game/?quiz_id=${quizData.id}`;
+            } else {
+                showNotification('Quiz data not available. Please go to dashboard.', 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+</body>
+</html>

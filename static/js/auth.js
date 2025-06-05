@@ -64,7 +64,7 @@ class AuthManager {
                 alert('Login successful! Welcome back, ' + response.username);
 
                 // Redirect to dashboard instead of home
-                window.location.href = '/dashboard/';
+                window.location.href = '/';
             } else {
                 console.error('Login failed:', response);
                 alert('Login failed: ' + (response.error || 'Invalid response from server'));
@@ -99,7 +99,7 @@ class AuthManager {
                 alert('Registration successful! Welcome, ' + response.username);
 
                 // Redirect to dashboard
-                window.location.href = '/dashboard/';
+                window.location.href = '/';
             } else {
                 console.error('Registration failed:', response);
                 alert('Registration failed: ' + (response.error || 'Invalid response from server'));
@@ -152,6 +152,20 @@ class AuthManager {
             username: localStorage.getItem('username'),
             userId: localStorage.getItem('userId')
         };
+    }
+
+    clearAuthData() {
+    localStorage.removeItem('username');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('authToken');
+
+    // ADD THESE LINES:
+    localStorage.removeItem('playerData');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('playerId');
+    localStorage.removeItem('currentQuizId');
+    localStorage.removeItem('currentQuizCode');
+    localStorage.removeItem('newQuizData');
     }
 }
 
@@ -232,3 +246,4 @@ if (document.getElementById('register-form')) {
 // Expose functions globally for console debugging
 window.checkLoginStatus = checkLoginStatus;
 window.auth = auth;
+

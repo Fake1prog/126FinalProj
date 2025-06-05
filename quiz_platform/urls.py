@@ -6,25 +6,27 @@ from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 from quiz_api.views import QuizViewSet, GameSessionViewSet, PlayerViewSet
 
+# Create the router and register viewsets
 router = DefaultRouter()
-router.register(r'quizzes', QuizViewSet)
-router.register(r'sessions', GameSessionViewSet)
-router.register(r'players', PlayerViewSet)
+router.register(r'quizzes', QuizViewSet, basename='quiz')
+router.register(r'sessions', GameSessionViewSet, basename='gamesession')
+router.register(r'players', PlayerViewSet, basename='player')
 
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
-    
+
     # API endpoints
     path('api/', include(router.urls)),
     path('api/auth/', include('authentication.urls')),
-    
+
     # Frontend pages - serve HTML templates
     path('', TemplateView.as_view(template_name='index.html'), name='home'),
     path('register/', TemplateView.as_view(template_name='register.html'), name='register'),
     path('login/', TemplateView.as_view(template_name='login.html'), name='login'),
     path('dashboard/', TemplateView.as_view(template_name='dashboard.html'), name='dashboard'),
     path('create-quiz/', TemplateView.as_view(template_name='create-quiz.html'), name='create-quiz'),
+    path('quiz-created/', TemplateView.as_view(template_name='quiz-created.html'), name='quiz-created'),
     path('host-game/', TemplateView.as_view(template_name='host-game.html'), name='host-game'),
     path('join-game/', TemplateView.as_view(template_name='join-game.html'), name='join-game'),
     path('play-game/', TemplateView.as_view(template_name='play-game.html'), name='play-game'),

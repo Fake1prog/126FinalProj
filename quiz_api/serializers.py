@@ -60,14 +60,24 @@ class GameSessionSerializer(serializers.ModelSerializer):
     quiz_title = serializers.CharField(source='quiz.title', read_only=True)
     players = PlayerSerializer(many=True, read_only=True)
     total_questions = serializers.IntegerField(source='quiz.questions.count', read_only=True)
-
+    current_question = serializers.SerializerMethodField() 
+    
     class Meta:
         model = GameSession
         fields = [
             'id', 'quiz', 'quiz_title', 'status', 'current_question_index',
-            'started_at', 'ended_at', 'created_at', 'players', 'total_questions'
+            'started_at', 'ended_at', 'created_at', 'players', 'total_questions', 'current_question'
         ]
         read_only_fields = ['created_at', 'started_at', 'ended_at']
+    
+    def get_current_question(self, obj):
+        # Get ordered questions from quiz
+        questions = obj.quiz.questions.all().order_by('order')
+        index = obj.current_question_index or 0
+        if 0 <= index < questions.count():
+            question = questions[index]
+            return QuestionSerializer(question).data
+        return None
 
 
 class PlayerAnswerSerializer(serializers.ModelSerializer):
