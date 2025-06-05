@@ -84,6 +84,17 @@ class GameManager {
         }
     }
 
+    async getCurrentQuestion() {
+        try {
+            const session = await api.getSession(this.sessionId);
+            console.log("sezzion : ", session);
+            return session.current_question;
+        } catch (error) {
+            console.error('Error fetching current question:', error);
+            return null;
+        }
+    }
+
     async startGame() {
         try {
             const response = await api.startGame(this.sessionId);
@@ -126,9 +137,10 @@ class GameManager {
                 // Game has started
                 document.getElementById('waiting').style.display = 'none';
                 document.getElementById('question-display').style.display = 'block';
-
+                console.log("response = ", response);
                 // Get current question
                 const currentQuestion = await this.getCurrentQuestion();
+                console.log(currentQuestion);
                 if (currentQuestion) {
                     this.displayQuestionForPlayer(currentQuestion);
                 }
@@ -151,7 +163,7 @@ class GameManager {
         if (this.isHost) {
             document.getElementById('question-number').textContent = question.order + 1;
             document.getElementById('question-text').textContent = question.question_text;
-
+            console.log(question);
             const answersDiv = document.getElementById('answers');
             const allAnswers = [question.correct_answer, ...question.wrong_answers];
             const shuffled = this.shuffleArray(allAnswers);
@@ -167,7 +179,7 @@ class GameManager {
     displayQuestionForPlayer(question) {
         this.currentQuestion = question;
         document.getElementById('question-text').textContent = question.question_text;
-
+        console.log("haha -- ", question);
         const allAnswers = [question.correct_answer, ...question.wrong_answers];
         const shuffled = this.shuffleArray(allAnswers);
 
@@ -179,6 +191,7 @@ class GameManager {
 
         this.startTimer();
     }
+    
 
     startTimer() {
         this.timeLeft = 20;

@@ -14,7 +14,7 @@ class QuizAIService:
         self.api_key = config('OPENROUTER_API_KEY')
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
         # Updated to use the correct free model name
-        self.model = "microsoft/phi-4-reasoning:free"
+        self.model = "mistralai/mistral-7b-instruct:free"
 
         # Log API key status (but not the actual key)
         if self.api_key:

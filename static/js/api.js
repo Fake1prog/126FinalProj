@@ -159,6 +159,22 @@
             });
             return response.json();
         }
+
+        async getCurrentQuestion(sessionId) {
+            const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/current_question/`, {
+                method: 'GET',
+                headers: this.getHeaders(),
+                credentials: 'include'
+            });
+        
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`Failed to fetch current question (status: ${response.status})`);
+            }
+        
+            return response.json();
+        }
     }
 
     // Create global API instance
