@@ -12,19 +12,77 @@
             background: url("/static/images/dash_bg.png") center/cover no-repeat;
             min-height: 100vh;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 0;
         }
+
+        nav {
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 0 1rem 2rem;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    nav h2 {
+      font-size: 2rem;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #22223b;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-size: 2rem;
+      color: #22223b;
+      font-weight: 500;
+      transition: color 0.2s;
+      margin-right: 1rem;
+    }
+
+    nav a:hover {
+      color: #4A3AFF;
+    }
 
         .container {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 60px;
+            padding: 30px;
             width: 90%;
             max-width: 900px;
             display: flex;
-            gap: 60px;
+            flex-direction: column;
+            gap: 0px;
+            position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    justify-content: center;
+        }
+
+        .container a {
+            text-decoration: none;
+            font-size: 3rem;
+            font-weight: 500;
+            margin-left: 1.75rem;
+            color: black;
+        }
+
+        .container a:hover {
+            color: #4a3aff;
+        }
+
+        .quiz-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
             align-items: center;
         }
 
@@ -148,52 +206,64 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="left-section">
-            <div class="quiz-illustration"></div>
+    <nav>
+        <div style="display: flex; align-items: center; gap: 0.7rem;">
+          <a href="/">&#8592;</a>
+          <h2>Create a Quiz</h2>
         </div>
+      </nav>
 
-        <div class="right-section">
-            <h1>Create New Quiz</h1>
+    <div class="container">
+        
 
-            <div id="notification" class="notification"></div>
+        <div class="quiz-container">
+            <div class="left-section">
+                <div class="quiz-illustration"></div>
+            </div>
+    
+            <div class="right-section">
+    
+                <div id="notification" class="notification"></div>
 
-            <form id="quizForm">
-                <div class="form-group">
-                    <input
-                        type="text"
-                        id="quizTitle"
-                        name="title"
-                        placeholder="Quiz title..."
-                        required
-                        maxlength="200"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <input
-                        type="text"
-                        id="quizTopic"
-                        name="topic"
-                        placeholder="Topic (AI will generate questions about)"
-                        required
-                        maxlength="100"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <select id="difficulty" name="difficulty" required>
-                        <option value="medium">Medium</option>
-                        <option value="easy">Easy</option>
-                        <option value="hard">Hard</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="generate-button" id="generateButton">
-                    <div class="loading-spinner" id="loadingSpinner"></div>
-                    <span id="buttonText">Generate New Quiz with AI</span>
-                </button>
-            </form>
+                <h2>Enter Quiz Details</h2>
+    
+                <form id="quizForm">
+                    <div class="form-group">
+                        <input
+                            type="text"
+                            id="quizTitle"
+                            name="title"
+                            placeholder="Quiz title..."
+                            required
+                            maxlength="200"
+                        >
+                    </div>
+    
+                    <div class="form-group">
+                        <input
+                            type="text"
+                            id="quizTopic"
+                            name="topic"
+                            placeholder="Topic (AI will generate questions about)"
+                            required
+                            maxlength="100"
+                        >
+                    </div>
+    
+                    <div class="form-group">
+                        <select id="difficulty" name="difficulty" required>
+                            <option value="medium">Medium</option>
+                            <option value="easy">Easy</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+    
+                    <button type="submit" class="generate-button" id="generateButton">
+                        <div class="loading-spinner" id="loadingSpinner"></div>
+                        <span id="buttonText">Generate New Quiz with AI</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
