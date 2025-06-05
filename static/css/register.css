@@ -31,6 +31,43 @@ body {
     align-items: center;
     padding: 2rem;
 }
+/* 1. Define the “running glow” keyframes at top level */
+@keyframes rotateGlow {
+  0% {
+    /* top glow */
+    box-shadow: 0 -4px 10px rgba(102, 94, 253, 0.7);
+  }
+  25% {
+    /* right glow */
+    box-shadow: 4px 0 10px rgba(102, 94, 253, 0.7);
+  }
+  50% {
+    /* bottom glow */
+    box-shadow: 0 4px 10px rgba(102, 94, 253, 0.7);
+  }
+  75% {
+    /* left glow */
+    box-shadow: -4px 0 10px rgba(102, 94, 253, 0.7);
+  }
+  100% {
+    /* back to top */
+    box-shadow: 0 -4px 10px rgba(102, 94, 253, 0.7);
+  }
+}
+
+/* 2. Apply the animation to .auth-form at top level */
+.auth-form {
+  position: relative;               /* ensure shadows don’t get cut off */
+  background: var(--card-background);
+  padding: 2.5rem;
+  border-radius: 35px;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: none;                 /* remove any static shadow */
+
+  /* start the running highlight */
+  animation: rotateGlow 4s linear infinite;
+}
 @keyframes float {
   0%   { transform: translateY(-10px); }
   50%  { transform: translateY(10px); }
@@ -237,6 +274,7 @@ nav a.back-button:hover .icon-back {
     .auth-form {
         padding: 1.25rem;
     }
+    
 
     h2 {
         font-size: 1.5rem;
