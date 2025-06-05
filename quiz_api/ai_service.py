@@ -75,6 +75,8 @@ class QuizAIService:
         try:
             logger.info("Making API request to OpenRouter...")
             # Make the API request
+            print(f"Headers: {headers}")
+            print(f"Payload: {json.dumps(data, indent=2)}")  
             response = requests.post(self.base_url, headers=headers, json=data, timeout=30)
 
             logger.info(f"OpenRouter API response status: {response.status_code}")
@@ -91,6 +93,7 @@ class QuizAIService:
 
             response.raise_for_status()
 
+            print(f"⬅️ Raw response: {response.text}")
             # Parse the response
             result = response.json()
             logger.info("Successfully received AI response")
