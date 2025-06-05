@@ -15,54 +15,55 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 10px;
         }
 
         .main-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 700px;
             margin: 0 auto;
-            padding: 20px;
         }
 
         .game-card {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-            margin-bottom: 20px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
-        /* Player Header */
+        /* Compact Player Header */
         .player-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 0;
-            border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 30px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
         }
 
         .player-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .player-avatar {
-            width: 50px;
-            height: 50px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: bold;
         }
 
         .player-name {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 600;
             color: #1f2937;
         }
@@ -72,42 +73,43 @@
         }
 
         .score-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: #6b7280;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
         .score-value {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: #6366f1;
         }
 
-        /* Game Progress */
+        /* Compact Progress Section */
         .progress-section {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .progress-info {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .question-progress {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #6b7280;
+            font-weight: 500;
         }
 
         .timer-display {
             background: #fef3c7;
             color: #d97706;
-            padding: 8px 16px;
-            border-radius: 25px;
-            font-size: 1.2rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 1.1rem;
             font-weight: bold;
-            min-width: 80px;
+            min-width: 70px;
             text-align: center;
         }
 
@@ -124,8 +126,8 @@
 
         .progress-bar {
             background: #e5e7eb;
-            height: 8px;
-            border-radius: 4px;
+            height: 6px;
+            border-radius: 3px;
             overflow: hidden;
         }
 
@@ -135,36 +137,37 @@
             transition: width 0.3s ease;
         }
 
-        /* Waiting State */
+        /* Compact Waiting State */
         .waiting-state {
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 15px;
         }
 
         .waiting-animation {
-            font-size: 4rem;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 15px;
             animation: bounce 1.5s infinite;
         }
 
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+            50% { transform: translateY(-15px); }
         }
 
         .waiting-title {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: #1f2937;
         }
 
         .waiting-subtitle {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #6b7280;
+            margin-bottom: 20px;
         }
 
-        /* Question Display */
+        /* Compact Question Display */
         .question-section {
             display: none;
         }
@@ -174,49 +177,49 @@
         }
 
         .question-header {
-            text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .question-text {
-            font-size: 1.6rem;
-            line-height: 1.5;
+            font-size: 1.4rem;
+            line-height: 1.4;
             color: #1f2937;
             background: #f8fafc;
-            padding: 30px;
-            border-radius: 15px;
-            border-left: 5px solid #6366f1;
-            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #6366f1;
+            margin-bottom: 20px;
         }
 
         .answers-container {
             display: grid;
-            gap: 15px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .answer-option {
             background: #f8fafc;
             border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 16px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .answer-option:hover {
             background: #e0e7ff;
             border-color: #6366f1;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
         }
 
         .answer-option.selected {
             background: #e0e7ff;
             border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
         }
 
         .answer-option.disabled {
@@ -238,19 +241,19 @@
         .answer-label {
             background: #6366f1;
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1rem;
             flex-shrink: 0;
         }
 
         .answer-text {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #374151;
             flex-grow: 1;
         }
@@ -259,20 +262,19 @@
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: white;
             border: none;
-            padding: 18px 40px;
-            border-radius: 50px;
-            font-size: 1.2rem;
+            padding: 14px 32px;
+            border-radius: 25px;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
-            margin-top: 25px;
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
         }
 
         .submit-button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
         }
 
         .submit-button:disabled {
@@ -282,11 +284,11 @@
             box-shadow: none;
         }
 
-        /* Answer Feedback */
+        /* Compact Feedback Section */
         .feedback-section {
             display: none;
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 15px;
         }
 
         .feedback-section.active {
@@ -294,14 +296,14 @@
         }
 
         .feedback-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 15px;
         }
 
         .feedback-title {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .feedback-title.correct {
@@ -313,50 +315,55 @@
         }
 
         .feedback-details {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #6b7280;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .score-earned {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: bold;
             color: #6366f1;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .correct-answer {
             background: #dcfce7;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
         }
 
         .waiting-next {
             color: #6b7280;
             font-style: italic;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
         }
 
-        /* Mini Leaderboard */
+        /* Compact Leaderboard */
         .mini-leaderboard {
             background: #f8fafc;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 15px;
         }
 
         .mini-leaderboard h4 {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             color: #1f2937;
+            font-size: 1.1rem;
         }
 
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 6px 0;
             border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
         }
 
         .leaderboard-item:last-child {
@@ -365,15 +372,15 @@
 
         .leaderboard-item.current-player {
             background: #e0e7ff;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 6px 10px;
+            border-radius: 6px;
             border: 2px solid #6366f1;
         }
 
         .player-rank {
             font-weight: bold;
             color: #6366f1;
-            margin-right: 10px;
+            margin-right: 8px;
         }
 
         .leaderboard-name {
@@ -386,11 +393,11 @@
             color: #059669;
         }
 
-        /* Final Results */
+        /* Compact Final Results */
         .final-results {
             display: none;
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 15px;
         }
 
         .final-results.active {
@@ -398,74 +405,133 @@
         }
 
         .final-trophy {
-            font-size: 4rem;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 15px;
         }
 
         .final-title {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: #1f2937;
         }
 
         .final-score {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #6366f1;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .final-rank {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: #6b7280;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .play-again-btn {
             background: white;
             color: #6366f1;
             border: 2px solid #6366f1;
-            padding: 16px 40px;
-            border-radius: 50px;
-            font-size: 1.1rem;
+            padding: 14px 32px;
+            border-radius: 25px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .play-again-btn:hover {
             background: #6366f1;
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
         }
 
+        /* Responsive Design */
         @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
             .main-container {
-                padding: 10px;
+                padding: 0;
             }
 
             .game-card {
-                padding: 20px;
+                padding: 18px;
+                border-radius: 12px;
             }
 
             .player-header {
                 flex-direction: column;
-                gap: 15px;
+                gap: 10px;
                 text-align: center;
+                padding: 10px 0;
             }
 
             .progress-info {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
                 text-align: center;
             }
 
             .question-text {
+                font-size: 1.2rem;
+                padding: 16px;
+            }
+
+            .player-name {
+                font-size: 1.2rem;
+            }
+
+            .score-value {
+                font-size: 1.6rem;
+            }
+
+            .waiting-animation,
+            .feedback-icon,
+            .final-trophy {
+                font-size: 2.5rem;
+            }
+
+            .waiting-title,
+            .feedback-title {
                 font-size: 1.4rem;
-                padding: 20px;
+            }
+
+            .final-title {
+                font-size: 1.6rem;
+            }
+
+            .final-score {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-card {
+                padding: 16px;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+                padding: 14px;
+            }
+
+            .answer-option {
+                padding: 14px;
+            }
+
+            .answer-label {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+
+            .answer-text {
+                font-size: 0.95rem;
             }
         }
     </style>
@@ -1088,6 +1154,7 @@
 
             window.location.href = '/join-game/';
         }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             gameManager = new PlayerGameManager();
