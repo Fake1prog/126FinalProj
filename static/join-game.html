@@ -4,23 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Join Game - Quiz Show Platform</title>
-  <link rel="stylesheet" href="/static/css/style.css" />
   <style>
-
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-    background: 
-    url('./images/dash_bg.png'); /* Replace with your actual image path */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: url("/static/images/dash_bg.png") center/cover no-repeat;
       color: #22223b;
       display: flex;
       flex-direction: column;
@@ -30,7 +19,7 @@
     }
 
     nav {
-        margin: 0 auto;
+      margin: 0 auto;
       width: 100%;
       display: flex;
       align-items: center;
@@ -39,6 +28,7 @@
       background: transparent;
       box-shadow: none;
     }
+
     nav h2 {
       font-size: 2rem;
       margin: 0;
@@ -46,6 +36,7 @@
       letter-spacing: -1px;
       color: #22223b;
     }
+
     nav a {
       text-decoration: none;
       font-size: 2rem;
@@ -54,6 +45,7 @@
       transition: color 0.2s;
       margin-right: 1rem;
     }
+
     nav a:hover {
       color: #4A3AFF;
     }
@@ -68,52 +60,40 @@
 
     .quiz-card {
       display: flex;
+      flex-direction: row;
       align-items: center;
+      justify-content: center;
       background: #fff;
       border-radius: 18px;
-      box-shadow: 0 8px 32px 0 rgba(74, 58, 255, 0.10);
-      padding: 4rem 4rem 4rem 4rem;
+      box-shadow: 0 8px 32px rgba(74, 58, 255, 0.1);
+      padding: 3rem 5rem 3rem 5rem;
       max-width: 700px;
-      width: 100%;
-      gap: 5rem;
+      width: 90%;
+      gap: 3rem;
+      flex-wrap: wrap;
     }
 
-    .quiz-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 8px 32px rgba(74, 58, 255, 0.1);
-  padding: 3rem 5rem 3rem 5rem;
-  max-width: 700px;
-  width: 90%;
-  gap: 3rem;
-  flex-wrap: wrap;
-}
+    .quiz-illustration {
+      flex: 1 1 160px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-width: 250px;
+      padding: 1rem;
+    }
 
-.quiz-illustration {
-  flex: 1 1 160px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  max-width: 250px;
-  padding: 1rem;
-}
+    .quiz-illustration img {
+      width: 150%;
+      max-width: 500px;
+      height: auto;
+    }
 
-.quiz-illustration img {
-  width: 150%;
-  max-width:500px;
-  height: auto;
-}
-
-.quiz-form-section {
-  flex: 2 1 300px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
+    .quiz-form-section {
+      flex: 2 1 300px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
 
     .quiz-form-section h2 {
       margin: 0 0 1.1rem 0;
@@ -125,18 +105,18 @@
     }
 
     .quiz-form-section input[type="text"] {
-  width: 90%;
-  padding: 0.85rem 0.8rem;
-  font-size: 1.08rem;
-  border: 1.8px solid #e0e3f7;
-  border-radius: 9px;
-  margin-bottom: 1.1rem;
-  background: #f7f8fd;
-  transition: border 0.2s;
-  outline: none;
-  color: #22223b;
-  font-weight: 500;
-}
+      width: 90%;
+      padding: 0.85rem 0.8rem;
+      font-size: 1.08rem;
+      border: 1.8px solid #e0e3f7;
+      border-radius: 9px;
+      margin-bottom: 1.1rem;
+      background: #f7f8fd;
+      transition: border 0.2s;
+      outline: none;
+      color: #22223b;
+      font-weight: 500;
+    }
 
     .quiz-form-section input[type="text"]:focus {
       border: 2px solid #4a3aff;
@@ -161,11 +141,126 @@
       width: 100%;
       margin-top: 0.5rem;
       box-shadow: 0 2px 10px 0 rgba(74, 58, 255, 0.13);
-      transition: background 0.2s, box-shadow 0.2s;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
     }
-    .quiz-form-section button:hover {
+
+    .quiz-form-section button:hover:not(:disabled) {
       background: linear-gradient(90deg, #2a1a9e 70%, #4a3aff 100%);
       box-shadow: 0 4px 16px 0 rgba(74, 58, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .quiz-form-section button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 2px 10px 0 rgba(156, 163, 175, 0.13);
+    }
+
+    .notification {
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      font-weight: 500;
+      display: none;
+      text-align: center;
+    }
+
+    .notification.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .notification.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .notification.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .loading-spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .quiz-preview {
+      background: #f8fafc;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .quiz-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .quiz-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .quiz-details {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .players-waiting {
+      background: #e0e7ff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .players-waiting h4 {
+      margin: 0 0 10px 0;
+      color: #4338ca;
+    }
+
+    .player-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .player-tag {
+      background: #4a3aff;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .waiting-message {
+      text-align: center;
+      margin-top: 15px;
+      color: #6b7280;
+      font-style: italic;
     }
 
     @media (max-width: 900px) {
@@ -182,6 +277,7 @@
         margin-bottom: 1rem;
       }
     }
+
     @media (max-width: 600px) {
       nav {
         padding: 1.2rem 0 0.5rem 1rem;
@@ -207,8 +303,7 @@
   <div class="center-card-container">
     <div class="quiz-card">
       <div class="quiz-illustration">
-        <!-- Replace with your own illustration or use a placeholder -->
-        <img src="./images/abc.png" alt="Quiz Bubbles Illustration" />
+        <img src="/static/images/abc.png" alt="Quiz Bubbles Illustration" />
       </div>
       <div class="quiz-form-section">
         <h2>Enter Game Details</h2>
@@ -230,31 +325,341 @@
             placeholder="Enter Nickname"
             autocomplete="off"
           />
-          <button type="submit">Generate New Quiz with AI</button>
+          <button type="submit" id="join-button">
+            <span class="loading-spinner" id="loading-spinner"></span>
+            <span id="button-text">Join Quiz</span>
+          </button>
         </form>
+
+        <div id="notification" class="notification"></div>
+
+        <!-- Quiz Preview (shown after successful join) -->
+        <div class="quiz-preview" id="quiz-preview">
+          <div class="quiz-info">
+            <div class="quiz-title" id="preview-title">Quiz Title</div>
+            <div class="quiz-details" id="preview-details">5 Questions</div>
+          </div>
+          <div class="players-waiting">
+            <h4>Players Joined (<span id="player-count">1</span>)</h4>
+            <div class="player-list" id="player-list">
+              <!-- Players will be listed here -->
+            </div>
+          </div>
+          <div class="waiting-message">
+            Waiting for host to start the game...
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="/static/js/api.js"></script>
   <script>
-    document.getElementById('join-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    const API_BASE = '/api';
+    let csrfToken = null;
 
-      const joinCode = document.getElementById('join-code').value.toUpperCase();
-      const nickname = document.getElementById('nickname').value;
-
-      try {
-        const response = await api.joinQuiz(joinCode, nickname);
-
-        if (response.player && response.session) {
-          localStorage.setItem('playerData', JSON.stringify(response));
-          window.location.href = '/play-game/';
-        } else {
-          alert('Error: ' + (response.error || 'Failed to join game'));
+    // Get CSRF token from cookies
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
+      }
+      return cookieValue;
+    }
+
+    // Get CSRF token from API
+    async function getCSRFToken() {
+      try {
+        const response = await fetch('/api/auth/csrf/', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        csrfToken = data.csrfToken;
+        console.log('CSRF token obtained:', csrfToken);
+        return csrfToken;
       } catch (error) {
-        alert('Error joining game: ' + error.message);
+        console.error('Failed to get CSRF token:', error);
+        return null;
+      }
+    }
+
+    class JoinGameManager {
+      constructor() {
+        this.joinedData = null;
+        this.pollTimer = null;
+        this.initializeEventListeners();
+        this.initializeCSRF();
+      }
+
+      async initializeCSRF() {
+        // Try to get CSRF token from cookie first
+        csrfToken = getCookie('csrftoken');
+
+        // If not found, get from API
+        if (!csrfToken) {
+          await getCSRFToken();
+        }
+
+        console.log('CSRF initialized:', csrfToken ? 'Success' : 'Failed');
+      }
+
+      initializeEventListeners() {
+        // Auto-format join code input
+        document.getElementById('join-code').addEventListener('input', (e) => {
+          let value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          if (value.length > 6) {
+            value = value.substring(0, 6);
+          }
+          e.target.value = value;
+        });
+
+        // Handle nickname input
+        document.getElementById('nickname').addEventListener('input', (e) => {
+          let value = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+          if (value.length > 20) {
+            value = value.substring(0, 20);
+          }
+          e.target.value = value;
+        });
+
+        // Handle form submission
+        document.getElementById('join-form').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.joinQuiz();
+        });
+
+        // Check if there's a join code in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeFromUrl = urlParams.get('code');
+        if (codeFromUrl) {
+          document.getElementById('join-code').value = codeFromUrl.toUpperCase();
+          document.getElementById('nickname').focus();
+        }
+      }
+
+      async joinQuiz() {
+        const joinCode = document.getElementById('join-code').value.trim();
+        const nickname = document.getElementById('nickname').value.trim();
+
+        console.log('Attempting to join quiz:', { joinCode, nickname });
+
+        // Validate inputs
+        if (!joinCode || joinCode.length !== 6) {
+          this.showNotification('Please enter a valid 6-character quiz code', 'error');
+          return;
+        }
+
+        if (!nickname || nickname.length < 2) {
+          this.showNotification('Please enter a nickname (at least 2 characters)', 'error');
+          return;
+        }
+
+        // Ensure we have CSRF token
+        if (!csrfToken) {
+          console.log('No CSRF token, attempting to get one...');
+          await getCSRFToken();
+
+          if (!csrfToken) {
+            this.showNotification('Unable to initialize session. Please refresh the page.', 'error');
+            return;
+          }
+        }
+
+        this.setLoadingState(true);
+        this.hideNotification();
+
+        try {
+          console.log('Making API request with CSRF token:', csrfToken);
+
+          const response = await fetch(`${API_BASE}/sessions/join/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+            credentials: 'include', // Important for session-based auth
+            body: JSON.stringify({
+              join_code: joinCode,
+              nickname: nickname
+            })
+          });
+
+          console.log('Join API response status:', response.status);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Join API error response:', errorText);
+
+            let errorMessage = 'Failed to join quiz';
+            try {
+              const errorData = JSON.parse(errorText);
+              errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+              // Response isn't JSON, use the text
+              if (errorText.includes('404')) {
+                errorMessage = 'Quiz not found. Please check the join code.';
+              } else if (errorText.includes('403')) {
+                errorMessage = 'Access denied. Please refresh the page and try again.';
+              } else {
+                errorMessage = errorText;
+              }
+            }
+
+            throw new Error(errorMessage);
+          }
+
+          const data = await response.json();
+          console.log('Join successful:', data);
+
+          // Store the player and session data
+          localStorage.setItem('playerData', JSON.stringify(data));
+          this.joinedData = data;
+
+          // Show success and quiz preview
+          this.showNotification('Successfully joined the quiz!', 'success');
+          this.showQuizPreview(data);
+
+          // Hide form and start polling
+          document.getElementById('join-form').style.display = 'none';
+          this.startPolling();
+
+        } catch (error) {
+          console.error('Join quiz error:', error.message);
+          this.showNotification(error.message || 'Failed to join quiz. Please check the code and try again.', 'error');
+        } finally {
+          this.setLoadingState(false);
+        }
+      }
+
+      showQuizPreview(data) {
+        const preview = document.getElementById('quiz-preview');
+        const session = data.session;
+
+        // Update quiz information
+        document.getElementById('preview-title').textContent = session.quiz_title || 'Quiz';
+        document.getElementById('preview-details').textContent = `${session.total_questions || 5} Questions`;
+
+        // Update player list
+        this.updatePlayerList(session.players || []);
+
+        preview.style.display = 'block';
+      }
+
+      updatePlayerList(players) {
+        const playerList = document.getElementById('player-list');
+        const playerCount = document.getElementById('player-count');
+
+        playerCount.textContent = players.length;
+
+        if (players.length === 0) {
+          playerList.innerHTML = '<div style="color: #6b7280; font-style: italic;">No players yet</div>';
+          return;
+        }
+
+        const playerHTML = players.map(player =>
+          `<div class="player-tag">${player.nickname}</div>`
+        ).join('');
+
+        playerList.innerHTML = playerHTML;
+      }
+
+      startPolling() {
+        if (this.pollTimer) {
+          clearInterval(this.pollTimer);
+        }
+
+        // Poll every 2 seconds for updates
+        this.pollTimer = setInterval(async () => {
+          try {
+            if (!this.joinedData || !this.joinedData.session) return;
+
+            const response = await fetch(`${API_BASE}/sessions/${this.joinedData.session.id}/`, {
+              credentials: 'include'
+            });
+
+            if (!response.ok) throw new Error('Failed to get session data');
+
+            const sessionData = await response.json();
+
+            // Update player list
+            this.updatePlayerList(sessionData.players || []);
+
+            // Check if game has started
+            if (sessionData.status === 'active') {
+              // Game started, redirect to play page
+              clearInterval(this.pollTimer);
+              console.log('Game started, redirecting to play page...');
+              this.showNotification('Game is starting! Redirecting...', 'info');
+
+              setTimeout(() => {
+                window.location.href = '/play-game/';
+              }, 1500);
+            }
+
+          } catch (error) {
+            console.error('Polling error:', error.message);
+          }
+        }, 2000);
+      }
+
+      setLoadingState(loading) {
+        const joinButton = document.getElementById('join-button');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const buttonText = document.getElementById('button-text');
+
+        if (loading) {
+          joinButton.disabled = true;
+          loadingSpinner.style.display = 'inline-block';
+          buttonText.textContent = 'Joining...';
+        } else {
+          joinButton.disabled = false;
+          loadingSpinner.style.display = 'none';
+          buttonText.textContent = 'Join Quiz';
+        }
+      }
+
+      showNotification(message, type) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+
+        // Auto-hide success and info messages
+        if (type === 'success' || type === 'info') {
+          setTimeout(() => {
+            notification.style.display = 'none';
+          }, 5000);
+        }
+      }
+
+      hideNotification() {
+        document.getElementById('notification').style.display = 'none';
+      }
+
+      cleanup() {
+        if (this.pollTimer) {
+          clearInterval(this.pollTimer);
+        }
+      }
+    }
+
+    // Initialize the join game manager
+    let joinGameManager;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      joinGameManager = new JoinGameManager();
+    });
+
+    // Clean up polling when page unloads
+    window.addEventListener('beforeunload', () => {
+      if (joinGameManager) {
+        joinGameManager.cleanup();
       }
     });
   </script>

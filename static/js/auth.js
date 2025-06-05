@@ -153,6 +153,20 @@ class AuthManager {
             userId: localStorage.getItem('userId')
         };
     }
+
+    clearAuthData() {
+    localStorage.removeItem('username');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('authToken');
+
+    // ADD THESE LINES:
+    localStorage.removeItem('playerData');
+    localStorage.removeItem('sessionId');
+    localStorage.removeItem('playerId');
+    localStorage.removeItem('currentQuizId');
+    localStorage.removeItem('currentQuizCode');
+    localStorage.removeItem('newQuizData');
+    }
 }
 
 // Helper function to get CSRF token (used in logout)
@@ -232,3 +246,4 @@ if (document.getElementById('register-form')) {
 // Expose functions globally for console debugging
 window.checkLoginStatus = checkLoginStatus;
 window.auth = auth;
+
