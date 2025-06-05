@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: quiz-platform
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn quiz_platform.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quiz-platform-db
+          property: connectionString
+
+databases:
+  - name: quiz-platform-db
+    databaseName: quiz_platform
+    user: quiz_user
