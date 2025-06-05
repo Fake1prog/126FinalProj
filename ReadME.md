@@ -150,6 +150,8 @@ http://127.0.0.1:8000/
 
 ## Usage
 
+Note: Users can join a quiz without logging in, but they must be logged in to create a quiz.
+
 1. **Register & Log In**  
    - Visit `/register/` to create a new account.  
    - After registering, you’ll be automatically logged in.  
