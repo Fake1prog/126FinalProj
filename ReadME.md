@@ -233,3 +233,20 @@ This project is deployed on Render. To deploy your own instance:
 Check out the live demo:  
 [https://one26finalproj-nhp7.onrender.com/](https://one26finalproj-nhp7.onrender.com/)
 
+### Testing the Live Demo
+
+To fully experience the multiplayer functionality, you'll need at least two participants:
+
+- **Option 1**: Invite a friend to join your quiz session
+- **Option 2**: Open the demo in a different browser or incognito window to simulate multiple users
+
+**Quick Testing Steps:**
+1. **Host Setup**: Register/login on the main browser window and create a quiz
+2. **Player Setup**: Open a second browser (or incognito window), go to the same demo URL, and click "Join a Quiz"
+3. **Connect**: Use the 6-character join code from the host's screen to join as a player
+4. **Play**: The host can start the game once the player joins - no login required for players!
+
+**Important Notes:**
+- **Host must be logged in** to create and host quizzes
+- **Players don't need accounts** - they just need the join code and a nickname
+- Sessions are temporary, so start the game promptly after creating a quiz
