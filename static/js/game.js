@@ -499,6 +499,17 @@ class GameManager {
             overlay.remove();
         }
     }
+
+    setSyncStatus(message, type) {
+        console.log(`📡 Host Status: ${message} (${type})`);
+
+        // Optional: Add a visual status indicator
+        const statusElement = document.getElementById('host-status');
+        if (statusElement) {
+            statusElement.textContent = message;
+            statusElement.className = `host-status ${type}`;
+        }
+    }
 }
 
 // Global functions for HTML

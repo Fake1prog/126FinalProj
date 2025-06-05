@@ -735,7 +735,6 @@
                 }, 3000);
             }
 
-            // UPDATED: Enhanced game state monitoring with auto-advance detection
             startGameStateMonitoring() {
                 console.log('📊 Starting enhanced game state monitoring...');
 
@@ -749,13 +748,62 @@
                             const gameState = await response.json();
                             this.updateHostInterface(gameState);
 
-                            // NEW: Check for auto-advance
-                            this.checkAutoAdvance(gameState);
+                            // FIXED: Better auto-advance detection
+                            this.checkForQuestionChanges(gameState);
                         }
                     } catch (error) {
                         console.error('❌ Game state monitoring error:', error);
                     }
                 }, 1000); // Update every second for host
+            }
+
+            setSyncStatus(message, type) {
+                console.log(`📡 Host Status: ${message} (${type})`);
+
+                // Optional: Add a visual status indicator if you have one
+                const statusElement = document.getElementById('host-status');
+                if (statusElement) {
+                    statusElement.textContent = message;
+                    statusElement.className = `host-status ${type}`;
+                }
+            }
+
+           checkForQuestionChanges(gameState) {
+                const currentIndex = gameState.current_question_index || 0;
+                const timeLeft = gameState.time_left || 0;
+                const totalQuestions = gameState.total_questions || this.totalQuestions;
+
+                console.log(`🔍 Question check: Current=${currentIndex}, Total=${totalQuestions}, Status=${gameState.status}`);
+
+                // FIXED: Check for game completion FIRST
+                if (gameState.status === 'finished' || currentIndex >= totalQuestions) {
+                    console.log('🏁 Game completed - showing final results');
+
+                    // Make sure we have final scores data
+                    const finalScores = gameState.final_scores || gameState.players || [];
+                    this.showGameCompleted(finalScores);
+                    return;
+                }
+
+                // Check if question actually changed
+                if (currentIndex !== this.currentQuestionIndex) {
+                    console.log(`📝 Question change detected: ${this.currentQuestionIndex} → ${currentIndex}`);
+
+                    // Update current question index
+                    this.currentQuestionIndex = currentIndex;
+
+                    // Load the new question
+                    this.loadCurrentQuestion();
+
+                    // Show appropriate notification
+                    if (timeLeft <= 0 || gameState.auto_advanced) {
+                        console.log(`⏰ AUTO-ADVANCE: Question ${currentIndex + 1} loaded due to time expiry`);
+                        this.showAutoAdvanceNotification();
+                    } else {
+                        console.log(`👤 MANUAL ADVANCE: Question ${currentIndex + 1} loaded by host`);
+                        this.showNotification(`Advanced to Question ${currentIndex + 1}`, 'info');
+                    }
+                }
             }
 
             // NEW: Detect and handle auto-advance
@@ -800,26 +848,58 @@
             updateHostInterface(gameState) {
                 // Update timer display
                 const timeLeft = Math.ceil(gameState.time_left || 0);
-                document.getElementById('question-timer').textContent = timeLeft;
-                document.getElementById('time-remaining').textContent = `${timeLeft}s`;
-
-                // Update timer color based on time left
                 const timerElement = document.getElementById('question-timer');
-                if (timeLeft <= 5) {
-                    timerElement.classList.add('warning');
-                } else {
-                    timerElement.classList.remove('warning');
+                const timeRemainingElement = document.getElementById('time-remaining');
+
+                if (timerElement) {
+                    timerElement.textContent = timeLeft;
+
+                    if (timeLeft <= 5) {
+                        timerElement.classList.add('warning');
+                    } else {
+                        timerElement.classList.remove('warning');
+                    }
                 }
 
-                // Update responses count
-                document.getElementById('responses-count').textContent =
-                    `? / ${gameState.player_count} players responded`;
+                if (timeRemainingElement) {
+                    timeRemainingElement.textContent = `${timeLeft}s`;
+                }
 
-                // Update leaderboard
+                // FIXED: Now properly gets response count from backend
+                const responsesElement = document.getElementById('responses-count');
+                if (responsesElement) {
+                    const playerCount = gameState.player_count || 0;
+                    const responseCount = gameState.responses_received || 0;
+
+                    responsesElement.textContent = `${responseCount} / ${playerCount} players responded`;
+
+                    // Log for debugging
+                    console.log(`📊 Response tracking: ${responseCount}/${playerCount} players responded`);
+                }
+
+                // Update leaderboard with current players
                 if (gameState.players) {
                     this.updateGameLeaderboard(gameState.players);
+                    this.players = gameState.players;
+                }
+
+                // Enable/disable next question button
+                const nextBtn = document.getElementById('next-question-btn');
+                const nextBtnText = document.getElementById('next-btn-text');
+
+                if (nextBtn && nextBtnText) {
+                    if (timeLeft <= 0) {
+                        nextBtn.disabled = false;
+                        nextBtnText.textContent = 'Time Up - Next Question';
+                        nextBtn.style.background = '#f59e0b';
+                    } else {
+                        nextBtn.disabled = false;
+                        nextBtnText.textContent = 'Next Question';
+                        nextBtn.style.background = '#16a34a';
+                    }
                 }
             }
+
 
             async startGame() {
                 if (this.players.length === 0) {
@@ -926,6 +1006,9 @@
                     if (questions.length > this.currentQuestionIndex) {
                         this.currentQuestion = questions[this.currentQuestionIndex];
                         this.displayCurrentQuestion();
+                        console.log(`📝 Loaded question ${this.currentQuestionIndex + 1}: ${this.currentQuestion.question_text.substring(0, 50)}...`);
+                    } else {
+                        console.log('🏁 No more questions available');
                     }
                 } catch (error) {
                     console.error('❌ Error loading current question:', error);
@@ -991,16 +1074,12 @@
                     const data = await response.json();
                     console.log('⏭️ Next question response:', data);
 
-                    if (data.status === 'Quiz completed') {
+                    if (data.status === 'Quiz completed' || data.status === 'finished') {
                         this.showGameCompleted(data.final_scores || []);
                     } else {
-                        this.currentQuestionIndex++;
-                        this.lastQuestionIndex = this.currentQuestionIndex; // Update tracking
-                        await this.loadCurrentQuestion();
-                        console.log(`📝 Manually advanced to question ${this.currentQuestionIndex + 1}`);
-
-                        // Show manual advance notification
-                        this.showNotification(`Advanced to Question ${this.currentQuestionIndex + 1}`, 'info');
+                        // Don't manually increment here - let the monitoring detect the change
+                        console.log(`📝 Next question request sent, waiting for game state update...`);
+                        this.showNotification('Moving to next question...', 'info');
                     }
 
                 } catch (error) {
@@ -1010,27 +1089,97 @@
             }
 
             showGameCompleted(finalScores) {
+                console.log('🏁 Host game completed - showing final screen');
+                console.log('Final scores data:', finalScores);
+
                 if (this.gameStateInterval) {
                     clearInterval(this.gameStateInterval);
                 }
 
+                // Stop all monitoring
+                this.setSyncStatus('🏁 Game Complete', 'success');
+
+                // Ensure we have valid data
+                const playersData = Array.isArray(finalScores) ? finalScores : [];
+                const playerCount = playersData.length || this.players.length || 0;
+
+                // Replace the entire game controls section with completion screen
                 document.getElementById('game-controls').innerHTML = `
-                    <div style="text-align: center; padding: 40px;">
-                        <h2 style="color: #16a34a; margin-bottom: 30px;">🎉 Quiz Completed!</h2>
-                        <div class="mini-leaderboard">
-                            <h4>Final Results</h4>
-                            ${finalScores.map((player, index) => `
-                                <div class="leaderboard-item">
-                                    <span>#${index + 1} ${player.nickname}</span>
-                                    <span>${player.score} pts</span>
-                                </div>
-                            `).join('')}
+                    <div style="text-align: center; padding: 50px 20px;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🏆</div>
+                        <h2 style="color: #16a34a; margin-bottom: 20px; font-size: 2rem;">Quiz Completed Successfully!</h2>
+                        <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 30px;">
+                            Great job hosting! All ${this.totalQuestions} questions have been completed.
+                        </p>
+
+                        <div class="mini-leaderboard" style="margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto;">
+                            <h4 style="font-size: 1.3rem; margin-bottom: 20px; color: #1f2937;">🥇 Final Results</h4>
+                            ${playersData.length > 0 ? playersData.map((player, index) => {
+                                let medal = '';
+                                let bgColor = '';
+                                if (index === 0) {
+                                    medal = '🥇';
+                                    bgColor = 'background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #92400e;';
+                                } else if (index === 1) {
+                                    medal = '🥈';
+                                    bgColor = 'background: linear-gradient(135deg, #c0c0c0 0%, #e5e7eb 100%); color: #374151;';
+                                } else if (index === 2) {
+                                    medal = '🥉';
+                                    bgColor = 'background: linear-gradient(135deg, #cd7f32 0%, #d97706 100%); color: #fff;';
+                                } else {
+                                    bgColor = 'background: #f8fafc; color: #374151;';
+                                }
+
+                                return `
+                                    <div class="leaderboard-item" style="padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; ${bgColor}">
+                                        <span style="font-weight: bold; font-size: 1.1rem;">
+                                            ${medal} #${index + 1} ${player.nickname}
+                                        </span>
+                                        <span style="font-weight: bold; font-size: 1.1rem;">${player.score || 0} pts</span>
+                                    </div>
+                                `;
+                            }).join('') : '<div style="color: #6b7280; padding: 20px;">No player data available</div>'}
                         </div>
-                        <button class="secondary-button" onclick="window.location.href='/dashboard/'" style="margin-top: 20px;">
-                            Back to Dashboard
-                        </button>
+
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+                            <h4 style="color: #374151; margin-bottom: 10px;">📊 Game Statistics</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: #6366f1;">${playerCount}</div>
+                                    <div style="color: #6b7280; font-size: 0.9rem;">Total Players</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.5rem; font-weight: bold; color: #6366f1;">${this.totalQuestions}</div>
+                                    <div style="color: #6b7280; font-size: 0.9rem;">Questions Completed</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                            <button class="generate-button" onclick="window.location.href='/dashboard/'"
+                                    style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); flex: 1; min-width: 200px; max-width: 250px;">
+                                <span style="font-size: 1.1rem;">📊 Back to Dashboard</span>
+                            </button>
+
+                            <button class="secondary-button" onclick="hostAnotherQuiz()"
+                                    style="flex: 1; min-width: 200px; max-width: 250px;">
+                                <span style="font-size: 1.1rem;">🎮 Host Another Quiz</span>
+                            </button>
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 15px; background: #e0e7ff; border-radius: 8px; border-left: 4px solid #6366f1;">
+                            <p style="color: #1e40af; margin: 0; font-size: 0.95rem;">
+                                💡 <strong>Tip:</strong> Players can now see their final results. You can start a new quiz or return to your dashboard.
+                            </p>
+                        </div>
                     </div>
                 `;
+
+                // Show completion notification
+                this.showNotification('🎉 Quiz completed successfully! All players have finished.', 'success');
+
+                // Log completion
+                console.log('🏁 Host game completed successfully');
             }
 
             setLoadingState(isLoading, type) {
@@ -1125,6 +1274,32 @@
             localStorage.removeItem('playerId');
             window.location.href = '/dashboard/';
         }
+
+        // Helper function for hosting another quiz
+        function hostAnotherQuiz() {
+            // Clear any stored game data
+            localStorage.removeItem('currentQuizId');
+            localStorage.removeItem('sessionId');
+            localStorage.removeItem('currentQuizCode');
+
+            // Show confirmation
+            if (confirm('Start hosting a new quiz? This will take you back to create a new quiz.')) {
+                console.log('🎮 Redirecting to create new quiz');
+                window.location.href = '/dashboard/';
+            }
+        }
+
+        function setSyncStatus(message, type) {
+            console.log(`📡 Host Status: ${message} (${type})`);
+
+            // Optional: Add a visual status indicator if you have one
+            const statusElement = document.getElementById('host-status');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = `host-status ${type}`;
+            }
+        }
+
     </script>
 </body>
 </html>
