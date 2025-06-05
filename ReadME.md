@@ -1,6 +1,6 @@
 # AI THINKS SO!
 
-**AI THINKS SO!** is a web-based, real-time multiplayer quiz platform powered by AI. Users can log in or register, create AI-generated quizzes on any topic and difficulty level, host live quiz sessions, and invite friends to join using a 6-character join code. Participants answer questions in real time, earn points, and see live leaderboards. The platform is built with Django (Python) on the back end and vanilla JavaScript, HTML, and CSS on the front end.
+**AI THINKS SO!** is a web-based, real-time multiplayer quiz platform powered by AI. Users can log in or register, create AI-generated quizzes on any topic and difficulty level, host live quiz sessions, and invite friends to join using a 6-character join code. Participants answer questions in real time, earn points, and see live leaderboards. The platform is built with Django (Python) on the back end and JavaScript, HTML, and CSS on the front end.
 
 ---
 
