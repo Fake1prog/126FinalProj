@@ -31,10 +31,18 @@ body {
     align-items: center;
     padding: 2rem;
 }
+@keyframes float {
+  0%   { transform: translateY(-10px); }
+  50%  { transform: translateY(10px); }
+  100% { transform: translateY(-10px); }
+}
 
+/* 2. Apply animation to the robot image at top level */
 .image-section img {
-    max-width: 100%;
-    max-height: 90%;
+  max-width: 100%;
+  max-height: 90%;
+  display: inline-block;
+  animation: float 3s linear infinite;
 }
 
 .form-section {
@@ -85,7 +93,7 @@ h2 {
     background: var(--card-background);
     padding: 2.5rem;
     border-radius: 35px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 10px #6D3AFF;
     width: 100%;
     box-sizing: border-box;
 }
@@ -163,9 +171,24 @@ nav {
     left: 3rem;  
 }
 
-nav a.back-button:hover img {
-    filter: brightness(85%);
+/* Base back‐icon */
+nav a.back-button .icon-back {
+  display: block;
+  width: 32px;
+  height: 32px;
+  color: var(--primary-color);          /* #6C63FF */
+  transition: transform 0.2s ease, color 0.2s ease, filter 0.2s ease;
 }
+
+/* Hover: scale up + violet glow */
+nav a.back-button:hover .icon-back {
+  transform: scale(1.2);
+  color: var(--primary-color);          /* stays violet */
+  /* add a soft violet glow */
+  filter: drop-shadow(0 0 5px rgba(108, 99, 255, 0.7));
+}
+
+
 
 @media screen and (max-width: 768px) {
     .split-container {
@@ -180,11 +203,7 @@ nav a.back-button:hover img {
         padding: 1rem;
     }
 
-    .image-section img {
-        max-height: 100%;
-        width: auto;
-        object-fit: contain;
-    }
+
 
     .form-section {
         flex: none;
