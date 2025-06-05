@@ -1346,13 +1346,6 @@
             }
         }
 
-        function endGame() {
-            if (confirm('Are you sure you want to end the game?')) {
-                console.log('🛑 End game requested');
-                window.location.href = '/dashboard/';
-            }
-        }
-
         function backToDashboard() {
             localStorage.removeItem('playerData');
             localStorage.removeItem('sessionId');
@@ -1370,6 +1363,40 @@
             // Show confirmation
             if (confirm('Start hosting a new quiz? This will take you back to create a new quiz.')) {
                 console.log('🎮 Redirecting to create new quiz');
+                window.location.href = '/dashboard/';
+            }
+        }
+
+        function endGame() {
+            if (confirm('Are you sure you want to end the game? This will immediately finish the quiz for all players.')) {
+                console.log('🛑 End game requested');
+
+                // Make the API call without waiting for response
+                if (gameManager && gameManager.sessionId) {
+                    fetch(`${API_BASE}/sessions/${gameManager.sessionId}/end_game/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        credentials: 'include'
+                    }).then(response => {
+                        if (response.ok) {
+                            console.log('✅ Game ended successfully on server');
+                        } else {
+                            console.warn('⚠️ Game end API call failed');
+                        }
+                    }).catch(error => {
+                        console.error('❌ Error ending game:', error);
+                    });
+                }
+
+                // Clean up and redirect immediately
+                if (gameManager) {
+                    gameManager.cleanup();
+                }
+
+                alert('Game ended successfully!');
                 window.location.href = '/dashboard/';
             }
         }

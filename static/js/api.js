@@ -35,6 +35,15 @@
             return headers;
         }
 
+        async endGame(sessionId) {
+            const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/end_game/`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                credentials: 'include'
+            });
+            return response.json();
+        }
+
         // Auth endpoints
         async register(username, email, password) {
             const response = await fetch(`${API_BASE_URL}/auth/register/`, {

@@ -74,6 +74,7 @@ class QuizViewSet(viewsets.ModelViewSet):
         quiz = serializer.save(host=self.request.user)
         logger.info(f"Quiz created with ID: {quiz.id}, Host: {quiz.host.username}")
 
+
     @action(detail=False, methods=['post'], serializer_class=QuizCreateSerializer)
     def create_with_ai(self, request):
         """Create a quiz with AI-generated questions"""
@@ -407,6 +408,32 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @action(detail=True, methods=['post'])
+    def end_game(self, request, pk=None):
+        """End the game (host only)"""
+        session = self.get_object()
+
+        # Check if user is the host
+        if request.user != session.quiz.host:
+            return Response(
+                {'error': 'Only the host can end the game'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # End the game
+        session.status = 'finished'
+        session.ended_at = timezone.now()
+        session.save()
+
+        logger.info(f"🛑 Game ended by host for session {session.id}")
+
+        # Return final results
+        players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+        return Response({
+            'status': 'Game ended by host',
+            'final_scores': PlayerSerializer(players, many=True).data
+        })
+
 
     @action(detail=True, methods=['post'])
     def start_game(self, request, pk=None):
@@ -548,6 +575,10 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                 {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+
+
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
