@@ -247,7 +247,6 @@
             color: var(--text-main);
         }
         .join-form {
-             background: #f3f4ff;
              padding: 10px;
              border-radius: 30px;
             border: 0px solid #e4e7fd;
@@ -439,14 +438,13 @@
 
             </div>
             <div class="join-content">
-                <div class="join-title">CLONEABLES FOR WEBFLOW</div>
+                
                 <div class="join-main">Join a Quiz</div>
                 <form class="join-form" onsubmit="joinQuiz(event)">
-                    <input type="text" id="join-code" placeholder="Enter 6-digit code" maxlength="6" autocomplete="off" />
                     <button type="submit">Join Game</button>
                 </form>
                 <div class="features-list">
-                    <div class="feature-item"><span class="checkmark">✔</span> AI generates 10 questions on any topic</div>
+                    <div class="feature-item"><span class="checkmark">✔</span> AI generates 5 questions on any topic</div>
                     <div class="feature-item"><span class="checkmark">✔</span> Three difficulty levels</div>
                     <div class="feature-item"><span class="checkmark">✔</span> Real-time scoring</div>
                     <div class="feature-item"><span class="checkmark">✔</span> Multiplayer support</div>
@@ -466,16 +464,6 @@
     <script>
         function joinQuiz(e) {
             if (e) e.preventDefault();
-            const joinCode = document.getElementById('join-code').value.trim().toUpperCase();
-            if (!joinCode) {
-                alert('Please enter a join code');
-                return;
-            }
-            if (joinCode.length !== 6) {
-                alert('Join code must be 6 characters');
-                return;
-            }
-            localStorage.setItem('pendingJoinCode', joinCode);
             window.location.href = '/join-game/';
         }
 
