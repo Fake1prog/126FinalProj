@@ -597,8 +597,16 @@
               console.log('Game started, redirecting to play page...');
               this.showNotification('Game is starting! Redirecting...', 'info');
 
+              // 🚀 CRITICAL FIX: Include session ID in redirect URL
+              const sessionId = this.joinedData.session.id;
+              console.log(`✅ Redirecting with session ID: ${sessionId}`);
+
               setTimeout(() => {
-                window.location.href = '/play-game/';
+                // OLD (causes session ID problem):
+                // window.location.href = '/play-game/';
+
+                // NEW (fixes session ID problem):
+                window.location.href = `/play-game/?session=${sessionId}`;
               }, 1500);
             }
 

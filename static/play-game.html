@@ -661,6 +661,67 @@
         </div>
     </div>
 
+    <!-- ADD THIS SCRIPT RIGHT AT THE TOP OF YOUR play-game.html, BEFORE ANY OTHER SCRIPTS -->
+
+<script>
+// AUTOMATIC SESSION ID DETECTION AND REDIRECT
+// This runs immediately when the page loads and fixes the session ID issue
+(function() {
+    console.log('🔧 Auto-detecting session ID...');
+
+    // Check if session ID is already in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSessionId = urlParams.get('session');
+
+    if (urlSessionId) {
+        console.log(`✅ Session ID already in URL: ${urlSessionId}`);
+        return; // URL is correct, let the page load normally
+    }
+
+    console.log('🔍 No session ID in URL, checking localStorage...');
+
+    // Try to get session ID from localStorage
+    try {
+        const playerDataString = localStorage.getItem('playerData');
+
+        if (!playerDataString) {
+            console.log('❌ No playerData found in localStorage');
+            alert('No game session found. Please join a quiz first.');
+            window.location.href = '/join-game/';
+            return;
+        }
+
+        const playerData = JSON.parse(playerDataString);
+        const sessionId = playerData.session?.id;
+
+        if (sessionId) {
+            console.log(`✅ Found session ID in localStorage: ${sessionId}`);
+            console.log('🔄 Automatically redirecting with session ID...');
+
+            // Redirect with session ID in URL
+            const newUrl = `/play-game/?session=${sessionId}`;
+            window.location.replace(newUrl);
+            return;
+
+        } else {
+            console.log('❌ No session ID found in playerData');
+            console.log('PlayerData contents:', playerData);
+            alert('Invalid game session data. Please join a quiz again.');
+            window.location.href = '/join-game/';
+            return;
+        }
+
+    } catch (error) {
+        console.error('❌ Error reading localStorage:', error);
+        alert('Error loading game session. Please try joining again.');
+        window.location.href = '/join-game/';
+        return;
+    }
+})();
+
+console.log('🎮 Session ID auto-detection completed');
+</script>
+
     <script>
         // UNIFIED GAME MANAGER - Combines all functionality
         class UnifiedGameManager {
