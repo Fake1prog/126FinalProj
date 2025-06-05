@@ -137,8 +137,9 @@ class AuthManager {
             console.error('Server logout error:', error);
         });
 
-        // Redirect to home
-        window.location.href = '/';
+        // Show alert and then redirect
+        alert('Logged out successfully.');
+        window.location.replace('/');
     }
 
     // Method to check if user is currently logged in
