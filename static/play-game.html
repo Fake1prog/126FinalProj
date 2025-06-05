@@ -449,6 +449,25 @@
             box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
         }
 
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            max-width: 300px;
+            display: none;
+        }
+
+        .debug-panel.active {
+            display: block;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             body {
@@ -537,6 +556,16 @@
     </style>
 </head>
 <body>
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debug-panel">
+        <div><strong>Debug Info:</strong></div>
+        <div>Session ID: <span id="debug-session-id">Loading...</span></div>
+        <div>Player ID: <span id="debug-player-id">Loading...</span></div>
+        <div>Game Status: <span id="debug-status">Loading...</span></div>
+        <div>Polling: <span id="debug-polling">Stopped</span></div>
+        <button onclick="toggleDebugPanel()" style="margin-top: 8px; padding: 4px 8px; border: none; background: #6366f1; color: white; border-radius: 4px; cursor: pointer;">Hide</button>
+    </div>
+
     <div class="main-container">
         <div class="game-card">
             <!-- Player Header -->
@@ -633,27 +662,13 @@
     </div>
 
     <script>
-        const API_BASE = '/api';
-        let csrfToken = '';
-
-        // Get CSRF token from cookies
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        class PlayerGameManager {
+        // UNIFIED GAME MANAGER - Combines all functionality
+        class UnifiedGameManager {
             constructor() {
+                this.API_BASE = '/api';
+                this.csrfToken = '';
+
+                // Game state
                 this.playerId = null;
                 this.sessionId = null;
                 this.playerData = null;
@@ -662,119 +677,224 @@
                 this.selectedAnswer = null;
                 this.hasAnswered = false;
                 this.gameTimer = null;
+                this.questionTimer = null;
                 this.timeLeft = 20;
                 this.totalQuestions = 5;
                 this.currentQuestionIndex = 0;
+
+                // Debug mode
+                this.debugMode = true;
 
                 this.init();
             }
 
             async init() {
-                try {
-                    // Fetch CSRF token first
-                    await this.fetchCSRFToken();
+                this.log('🚀 Initializing Unified Game Manager...');
 
-                    // Get player data from localStorage (set when joining)
-                    const storedPlayerData = localStorage.getItem('playerData');
-                    if (!storedPlayerData) {
-                        alert('No game session found. Please join a quiz first.');
-                        window.location.href = '/join-game/';
+                try {
+                    // Get session ID from multiple sources
+                    this.sessionId = this.getSessionId();
+
+                    if (!this.sessionId) {
+                        this.showError('No session ID found! Add ?session=YOUR_SESSION_ID to URL');
                         return;
                     }
 
-                    const gameData = JSON.parse(storedPlayerData);
-                    this.playerData = gameData.player;
-                    this.sessionData = gameData.session;
-                    this.playerId = this.playerData.id;
-                    this.sessionId = this.sessionData.id;
-                    this.totalQuestions = this.sessionData.total_questions || 5;
+                    this.log(`✅ Session ID found: ${this.sessionId}`);
+                    this.updateDebugPanel();
 
-                    // Update UI with player info
+                    // Fetch CSRF token
+                    await this.fetchCSRFToken();
+
+                    // Try to get player data from localStorage first
+                    const storedPlayerData = localStorage.getItem('playerData');
+                    if (storedPlayerData) {
+                        const gameData = JSON.parse(storedPlayerData);
+                        this.playerData = gameData.player;
+                        this.playerId = this.playerData.id;
+                        this.log(`📱 Player data from localStorage: ${this.playerData.nickname}`);
+                    }
+
+                    // Update UI with available player info
                     this.updatePlayerInfo();
 
-                    // Start polling for game state
+                    // Start game polling
                     this.startGamePolling();
 
                 } catch (error) {
-                    console.error('Error initializing player game:', error);
-                    alert('Error loading game. Please try again.');
-                    window.location.href = '/join-game/';
+                    this.log(`❌ Initialization error: ${error.message}`);
+                    this.showError('Error loading game. Please try again.');
                 }
+            }
+
+            getSessionId() {
+                // Try multiple sources for session ID
+                const sources = [
+                    () => new URLSearchParams(window.location.search).get('session'),
+                    () => new URLSearchParams(window.location.search).get('sessionId'),
+                    () => new URLSearchParams(window.location.search).get('id'),
+                    () => window.SESSION_ID,
+                    () => window.sessionId,
+                    () => document.body.dataset.sessionId,
+                    () => document.body.dataset.session,
+                    () => {
+                        const el = document.querySelector('[data-session-id]');
+                        return el ? el.dataset.sessionId : null;
+                    },
+                    () => {
+                        const match = window.location.pathname.match(/\/(\d+)\/?$/);
+                        return match ? match[1] : null;
+                    }
+                ];
+
+                for (const source of sources) {
+                    try {
+                        const id = source();
+                        if (id && id !== 'null' && id !== 'undefined') {
+                            this.log(`✅ Session ID found from source: ${id}`);
+                            return id;
+                        }
+                    } catch (e) {
+                        // Continue to next source
+                    }
+                }
+
+                return null;
             }
 
             async fetchCSRFToken() {
                 try {
-                    // Try API endpoint first
-                    const response = await fetch(`${API_BASE}/auth/csrf/`, {
+                    const response = await fetch(`${this.API_BASE}/auth/csrf/`, {
                         credentials: 'include'
                     });
 
                     if (response.ok) {
                         const data = await response.json();
-                        csrfToken = data.csrfToken;
-                        console.log('CSRF token fetched from API successfully');
+                        this.csrfToken = data.csrfToken;
+                        this.log('✅ CSRF token fetched from API');
                     } else {
                         throw new Error('API endpoint failed');
                     }
                 } catch (error) {
-                    console.log('API CSRF fetch failed, trying cookie fallback:', error);
-                    // Fallback to cookie
-                    csrfToken = getCookie('csrftoken');
-                    if (csrfToken) {
-                        console.log('CSRF token found in cookie');
+                    this.log('⚠️ API CSRF fetch failed, trying cookie fallback');
+                    this.csrfToken = this.getCookie('csrftoken');
+                    if (this.csrfToken) {
+                        this.log('✅ CSRF token found in cookie');
                     } else {
-                        console.error('No CSRF token available');
+                        this.log('❌ No CSRF token available');
                     }
                 }
             }
 
-            updatePlayerInfo() {
-                document.getElementById('player-name').textContent = this.playerData.nickname;
-                document.getElementById('player-avatar').textContent = this.playerData.nickname.charAt(0).toUpperCase();
-                document.getElementById('player-score').textContent = this.playerData.score || 0;
-                this.updateProgress(0, this.totalQuestions);
-            }
-
-            updateProgress(current, total) {
-                document.getElementById('question-progress').textContent = `Question ${current} of ${total}`;
-                const percentage = total > 0 ? (current / total) * 100 : 0;
-                document.getElementById('progress-fill').style.width = `${percentage}%`;
-            }
-
-            async startGamePolling() {
-                this.gameTimer = setInterval(async () => {
-                    try {
-                        await this.checkGameState();
-                    } catch (error) {
-                        console.error('Error polling game state:', error);
+            getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
                     }
+                }
+                return cookieValue;
+            }
+
+            updatePlayerInfo() {
+                if (this.playerData) {
+                    document.getElementById('player-name').textContent = this.playerData.nickname;
+                    document.getElementById('player-avatar').textContent = this.playerData.nickname.charAt(0).toUpperCase();
+                    document.getElementById('player-score').textContent = this.playerData.score || 0;
+                    this.playerId = this.playerData.id;
+                } else {
+                    document.getElementById('player-name').textContent = 'Player';
+                    document.getElementById('player-avatar').textContent = 'P';
+                }
+                this.updateDebugPanel();
+            }
+
+            startGamePolling() {
+                this.log(`🔄 Starting game polling for session ${this.sessionId}`);
+
+                // Stop any existing polling
+                if (this.gameTimer) {
+                    clearInterval(this.gameTimer);
+                }
+
+                // Poll every 2 seconds
+                this.gameTimer = setInterval(() => {
+                    this.checkGameState();
                 }, 2000);
 
-                // Initial check
-                await this.checkGameState();
+                // Check immediately
+                this.checkGameState();
+
+                this.updateDebugPanel();
             }
 
             async checkGameState() {
                 try {
-                    const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/`);
-                    if (!response.ok) throw new Error('Failed to get session data');
+                    this.log(`🔍 Checking game state for session ${this.sessionId}`);
 
-                    const sessionData = await response.json();
+                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/`, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
 
-                    if (sessionData.status === 'waiting') {
-                        this.showWaitingState(sessionData);
-                    } else if (sessionData.status === 'active') {
-                        await this.handleActiveGame(sessionData);
-                    } else if (sessionData.status === 'finished') {
-                        this.showFinalResults();
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
 
+                    const sessionData = await response.json();
+                    this.log(`📊 Session data:`, sessionData);
+
+                    this.sessionData = sessionData;
+                    this.handleGameStateUpdate(sessionData);
+                    this.updateDebugPanel();
+
                 } catch (error) {
-                    console.error('Error checking game state:', error);
+                    this.log(`❌ Error checking game state: ${error.message}`);
+                    // Try alternative endpoint
+                    this.checkCurrentQuestion();
+                }
+            }
+
+            async checkCurrentQuestion() {
+                try {
+                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/current_question/`, {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.log(`📊 Current question data:`, data);
+                        this.handleGameStateUpdate(data);
+                    }
+                } catch (error) {
+                    this.log(`❌ Error getting current question: ${error.message}`);
+                }
+            }
+
+            handleGameStateUpdate(data) {
+                const status = data.status;
+                this.log(`🎮 Game state: ${status}`);
+
+                if (status === 'waiting') {
+                    this.showWaitingState(data);
+                } else if (status === 'active') {
+                    this.handleActiveGame(data);
+                } else if (status === 'finished') {
+                    this.showFinalResults();
                 }
             }
 
             showWaitingState(sessionData) {
+                this.log('⏳ Showing waiting state');
                 this.showSection('waiting-state');
 
                 // Update waiting players list
@@ -792,38 +912,60 @@
             }
 
             async handleActiveGame(sessionData) {
-                this.currentQuestionIndex = sessionData.current_question_index;
-                this.updateProgress(this.currentQuestionIndex + 1, this.totalQuestions);
+                this.log('🎯 Game is active, handling question display');
 
-                // Get the current question
-                try {
-                    const quizResponse = await fetch(`${API_BASE}/quizzes/${sessionData.quiz}/`);
-                    if (!quizResponse.ok) throw new Error('Failed to get quiz data');
+                // Stop polling temporarily to avoid conflicts
+                if (this.gameTimer) {
+                    clearInterval(this.gameTimer);
+                    this.gameTimer = null;
+                }
 
-                    const quizData = await quizResponse.json();
-                    const questions = quizData.questions;
+                // Look for question in different formats
+                let questionData = sessionData.current_question || sessionData.question;
 
-                    if (questions && questions.length > this.currentQuestionIndex) {
-                        const question = questions[this.currentQuestionIndex];
+                if (!questionData && sessionData.quiz) {
+                    // Try to get quiz data and extract current question
+                    try {
+                        const quizResponse = await fetch(`${this.API_BASE}/quizzes/${sessionData.quiz}/`);
+                        if (quizResponse.ok) {
+                            const quizData = await quizResponse.json();
+                            const questions = quizData.questions;
+                            const currentIndex = sessionData.current_question_index || 0;
 
-                        // Check if this is a new question
-                        if (!this.currentQuestion || this.currentQuestion.id !== question.id) {
-                            this.currentQuestion = question;
-                            this.hasAnswered = false;
-                            this.selectedAnswer = null;
-                            this.displayQuestion(question);
-                            this.showSection('question-section');
-                            this.startQuestionTimer();
+                            if (questions && questions.length > currentIndex) {
+                                questionData = questions[currentIndex];
+                                this.log(`📋 Got question from quiz data: ${questionData.question_text}`);
+                            }
                         }
+                    } catch (error) {
+                        this.log(`❌ Error fetching quiz data: ${error.message}`);
                     }
+                }
 
-                } catch (error) {
-                    console.error('Error getting current question:', error);
+                if (questionData) {
+                    this.currentQuestion = questionData;
+                    this.currentQuestionIndex = sessionData.current_question_index || 0;
+                    this.totalQuestions = sessionData.total_questions || 5;
+
+                    this.displayQuestion(questionData);
+                    this.showSection('question-section');
+                    this.updateProgress();
+                    this.startQuestionTimer();
+                } else {
+                    this.log('⚠️ No question data available, resuming polling');
+                    // Resume polling if no question found
+                    this.startGamePolling();
                 }
             }
 
             displayQuestion(question) {
+                this.log(`❓ Displaying question: ${question.question_text}`);
+
                 document.getElementById('question-text').textContent = question.question_text;
+
+                // Reset answer state
+                this.selectedAnswer = null;
+                this.hasAnswered = false;
 
                 // Shuffle answers
                 const allAnswers = [question.correct_answer, ...question.wrong_answers];
@@ -834,7 +976,7 @@
                 const answerLabels = ['A', 'B', 'C', 'D'];
 
                 answersContainer.innerHTML = shuffledAnswers.map((answer, index) => `
-                    <div class="answer-option" onclick="selectAnswer('${answer}', this)">
+                    <div class="answer-option" onclick="window.gameManager.selectAnswer('${answer.replace(/'/g, "\\'")}', this)">
                         <div class="answer-label">${answerLabels[index]}</div>
                         <div class="answer-text">${answer}</div>
                     </div>
@@ -846,17 +988,38 @@
                 submitBtn.textContent = 'Select an answer to continue';
             }
 
+            selectAnswer(answer, element) {
+                if (this.hasAnswered) return;
+
+                this.log(`👆 Answer selected: ${answer}`);
+
+                // Remove previous selection
+                document.querySelectorAll('.answer-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+
+                // Mark current selection
+                element.classList.add('selected');
+                this.selectedAnswer = answer;
+
+                // Enable submit button
+                const submitBtn = document.getElementById('submit-button');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Answer';
+            }
+
             startQuestionTimer() {
                 this.timeLeft = 20;
                 this.updateTimerDisplay();
 
-                const questionTimer = setInterval(() => {
+                this.questionTimer = setInterval(() => {
                     this.timeLeft--;
                     this.updateTimerDisplay();
 
                     if (this.timeLeft <= 0) {
-                        clearInterval(questionTimer);
+                        clearInterval(this.questionTimer);
                         if (!this.hasAnswered) {
+                            this.log('⏰ Time\'s up!');
                             this.showTimeoutFeedback();
                         }
                     }
@@ -874,33 +1037,42 @@
                 }
             }
 
+            updateProgress() {
+                const current = this.currentQuestionIndex + 1;
+                const total = this.totalQuestions;
+
+                document.getElementById('question-progress').textContent = `Question ${current} of ${total}`;
+                const percentage = total > 0 ? (current / total) * 100 : 0;
+                document.getElementById('progress-fill').style.width = `${percentage}%`;
+            }
+
             async submitAnswer() {
-                if (!this.selectedAnswer || this.hasAnswered) return;
+                if (!this.selectedAnswer || this.hasAnswered || !this.playerId) {
+                    this.log('⚠️ Cannot submit answer - missing data or already answered');
+                    return;
+                }
 
                 this.hasAnswered = true;
                 const timeTaken = 20 - this.timeLeft;
 
-                // Disable all answer options
+                this.log(`📤 Submitting answer: ${this.selectedAnswer} (time: ${timeTaken}s)`);
+
+                // Disable UI
                 document.querySelectorAll('.answer-option').forEach(option => {
                     option.classList.add('disabled');
                 });
-
-                // Disable submit button
                 document.getElementById('submit-button').disabled = true;
 
                 try {
-                    // Ensure we have CSRF token
-                    if (!csrfToken) {
+                    if (!this.csrfToken) {
                         await this.fetchCSRFToken();
                     }
 
-                    console.log('Submitting answer with CSRF token:', csrfToken ? 'Present' : 'Missing');
-
-                    const response = await fetch(`${API_BASE}/players/${this.playerId}/submit_answer/`, {
+                    const response = await fetch(`${this.API_BASE}/players/${this.playerId}/submit_answer/`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': csrfToken,
+                            'X-CSRFToken': this.csrfToken,
                         },
                         credentials: 'include',
                         body: JSON.stringify({
@@ -912,67 +1084,41 @@
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Submit answer failed:', { status: response.status, error: errorText });
-
-                        if (response.status === 403) {
-                            // Try to refresh CSRF token and retry
-                            console.log('403 error, refreshing CSRF token and retrying...');
-                            await this.fetchCSRFToken();
-
-                            const retryResponse = await fetch(`${API_BASE}/players/${this.playerId}/submit_answer/`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': csrfToken,
-                                },
-                                credentials: 'include',
-                                body: JSON.stringify({
-                                    question_id: this.currentQuestion.id,
-                                    selected_answer: this.selectedAnswer,
-                                    time_taken: timeTaken
-                                })
-                            });
-
-                            if (!retryResponse.ok) {
-                                const retryErrorText = await retryResponse.text();
-                                throw new Error(`Retry failed: ${retryResponse.status} - ${retryErrorText}`);
-                            }
-
-                            const retryResult = await retryResponse.json();
-                            this.handleSubmitSuccess(retryResult);
-                            return;
-                        }
-
-                        throw new Error(`Failed to submit answer: ${response.status} - ${errorText}`);
+                        throw new Error(`Submit failed: ${response.status} - ${errorText}`);
                     }
 
                     const result = await response.json();
-                    this.handleSubmitSuccess(result);
+                    this.log(`✅ Answer submitted successfully:`, result);
+
+                    // Update player score
+                    if (this.playerData) {
+                        this.playerData.score = result.total_score;
+                    }
+                    document.getElementById('player-score').textContent = result.total_score;
+
+                    // Show feedback
+                    this.showAnswerFeedback(result);
 
                 } catch (error) {
-                    console.error('Error submitting answer:', error);
+                    this.log(`❌ Error submitting answer: ${error.message}`);
                     alert('Error submitting answer: ' + error.message);
                     this.hasAnswered = false;
 
-                    // Re-enable answer options
+                    // Re-enable UI
                     document.querySelectorAll('.answer-option').forEach(option => {
                         option.classList.remove('disabled');
                     });
+                    document.getElementById('submit-button').disabled = false;
                 }
             }
 
-            handleSubmitSuccess(result) {
-                console.log('Answer submitted successfully:', result);
-
-                // Update player score
-                this.playerData.score = result.total_score;
-                document.getElementById('player-score').textContent = result.total_score;
-
-                // Show feedback
-                this.showAnswerFeedback(result);
-            }
-
             showAnswerFeedback(result) {
+                // Clear question timer
+                if (this.questionTimer) {
+                    clearInterval(this.questionTimer);
+                    this.questionTimer = null;
+                }
+
                 // Highlight correct/incorrect answers
                 document.querySelectorAll('.answer-option').forEach(option => {
                     const answerText = option.querySelector('.answer-text').textContent;
@@ -983,7 +1129,7 @@
                     }
                 });
 
-                // Show feedback section after a brief delay
+                // Show feedback section after delay
                 setTimeout(() => {
                     this.showSection('feedback-section');
 
@@ -1011,10 +1157,10 @@
                         correctAnswerText.textContent = result.correct_answer;
                     }
 
-                    // Load and show current leaderboard
+                    // Update leaderboard
                     this.updateLeaderboard('feedback-leaderboard');
 
-                    // Wait a bit then continue polling for next question
+                    // Resume polling after feedback
                     setTimeout(() => {
                         this.startGamePolling();
                     }, 3000);
@@ -1023,6 +1169,11 @@
             }
 
             showTimeoutFeedback() {
+                if (this.questionTimer) {
+                    clearInterval(this.questionTimer);
+                    this.questionTimer = null;
+                }
+
                 this.showSection('feedback-section');
 
                 document.getElementById('feedback-icon').textContent = '⏰';
@@ -1042,7 +1193,7 @@
 
             async updateLeaderboard(elementId) {
                 try {
-                    const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/leaderboard/`);
+                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/leaderboard/`);
                     if (!response.ok) throw new Error('Failed to get leaderboard');
 
                     const data = await response.json();
@@ -1058,24 +1209,34 @@
                     `).join('');
 
                 } catch (error) {
-                    console.error('Error updating leaderboard:', error);
+                    this.log(`❌ Error updating leaderboard: ${error.message}`);
                 }
             }
 
             async showFinalResults() {
-                clearInterval(this.gameTimer);
+                this.log('🏁 Showing final results');
+
+                if (this.gameTimer) {
+                    clearInterval(this.gameTimer);
+                    this.gameTimer = null;
+                }
+                if (this.questionTimer) {
+                    clearInterval(this.questionTimer);
+                    this.questionTimer = null;
+                }
 
                 this.showSection('final-results');
 
                 // Update final score
-                document.getElementById('final-score-display').textContent = this.playerData.score;
+                const currentScore = this.playerData ? this.playerData.score : 0;
+                document.getElementById('final-score-display').textContent = currentScore;
 
                 // Get and display final leaderboard
                 await this.updateLeaderboard('final-leaderboard-display');
 
                 // Calculate final rank
                 try {
-                    const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/leaderboard/`);
+                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/leaderboard/`);
                     if (response.ok) {
                         const data = await response.json();
                         const players = data.leaderboard || [];
@@ -1085,18 +1246,20 @@
                         }
                     }
                 } catch (error) {
-                    console.error('Error getting final rank:', error);
+                    this.log(`❌ Error getting final rank: ${error.message}`);
                 }
             }
 
             showSection(sectionId) {
-                // Hide all sections
                 const sections = ['waiting-state', 'question-section', 'feedback-section', 'final-results'];
                 sections.forEach(section => {
                     const element = document.getElementById(section);
-                    element.classList.remove('active');
-                    if (section === sectionId) {
-                        element.classList.add('active');
+                    if (element) {
+                        element.classList.remove('active');
+                        element.style.display = section === sectionId ? 'block' : 'none';
+                        if (section === sectionId) {
+                            element.classList.add('active');
+                        }
                     }
                 });
             }
@@ -1109,32 +1272,42 @@
                 return array;
             }
 
+            showError(message) {
+                alert(message);
+                console.error('Game Error:', message);
+            }
+
+            log(message, data = null) {
+                if (this.debugMode) {
+                    console.log(message, data || '');
+                }
+            }
+
+            updateDebugPanel() {
+                document.getElementById('debug-session-id').textContent = this.sessionId || 'None';
+                document.getElementById('debug-player-id').textContent = this.playerId || 'None';
+                document.getElementById('debug-status').textContent = this.sessionData ? this.sessionData.status : 'Unknown';
+                document.getElementById('debug-polling').textContent = this.gameTimer ? 'Active' : 'Stopped';
+            }
+
             cleanup() {
                 if (this.gameTimer) {
                     clearInterval(this.gameTimer);
                 }
+                if (this.questionTimer) {
+                    clearInterval(this.questionTimer);
+                }
             }
         }
 
+        // Global game manager instance
         let gameManager;
 
-        // Global functions
+        // Global functions for UI interaction
         function selectAnswer(answer, element) {
-            if (gameManager.hasAnswered) return;
-
-            // Remove previous selection
-            document.querySelectorAll('.answer-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-
-            // Mark current selection
-            element.classList.add('selected');
-            gameManager.selectedAnswer = answer;
-
-            // Enable submit button
-            const submitBtn = document.getElementById('submit-button');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit Answer';
+            if (gameManager) {
+                gameManager.selectAnswer(answer, element);
+            }
         }
 
         function submitAnswer() {
@@ -1144,7 +1317,7 @@
         }
 
         function playAgain() {
-            // Clear all game-related data
+            // Clear game data
             localStorage.removeItem('playerData');
             localStorage.removeItem('sessionId');
             localStorage.removeItem('playerId');
@@ -1155,9 +1328,24 @@
             window.location.href = '/join-game/';
         }
 
-        // Initialize
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debug-panel');
+            panel.classList.toggle('active');
+        }
+
+        // Initialize game manager when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            gameManager = new PlayerGameManager();
+            console.log('🎮 Initializing Unified Game Manager...');
+            gameManager = new UnifiedGameManager();
+
+            // Show debug panel initially if no session ID in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!urlParams.get('session') && !urlParams.get('sessionId')) {
+                document.getElementById('debug-panel').classList.add('active');
+            }
+
+            // Make available globally for debugging
+            window.gameManager = gameManager;
         });
 
         // Cleanup on page unload
@@ -1167,225 +1355,12 @@
             }
         });
 
-        // Game polling system - checks for game state updates every 3 seconds
-        let gameStateInterval = null;
-        let currentSessionId = null;
-
-        // Get session ID from URL or page data
-        function getSessionId() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('session') || urlParams.get('sessionId') || window.SESSION_ID;
-        }
-
-        // Start polling for game state changes
-        function startGamePolling() {
-            currentSessionId = getSessionId();
-
-            if (!currentSessionId) {
-                console.error('No session ID found! Cannot poll for game state.');
-                return;
+        // Debug shortcut
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F2') {
+                toggleDebugPanel();
             }
-
-            console.log(`Starting game state polling for session ${currentSessionId}`);
-
-            // Poll every 3 seconds
-            gameStateInterval = setInterval(checkGameState, 3000);
-
-            // Check immediately
-            checkGameState();
-        }
-
-        // Check current game state
-        async function checkGameState() {
-            try {
-                console.log(`Polling game state for session ${currentSessionId}...`);
-
-                // Try to get session info
-                const response = await fetch(`/api/sessions/${currentSessionId}/`, {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const sessionData = await response.json();
-                console.log('Session data received:', sessionData);
-
-                handleGameStateUpdate(sessionData);
-
-            } catch (error) {
-                console.error('Error checking game state:', error);
-
-                // Try alternative endpoint
-                await checkCurrentQuestion();
-            }
-        }
-
-        // Try alternative endpoint for current question
-        async function checkCurrentQuestion() {
-            try {
-                const response = await fetch(`/api/sessions/${currentSessionId}/current_question/`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Current question data:', data);
-                    handleGameStateUpdate(data);
-                }
-            } catch (error) {
-                console.error('Error getting current question:', error);
-            }
-        }
-
-        // Handle game state updates
-        function handleGameStateUpdate(data) {
-            const status = data.status;
-
-            if (status === 'waiting') {
-                showWaitingState();
-            } else if (status === 'active' && data.current_question) {
-                showQuestion(data.current_question);
-            } else if (status === 'active' && data.question) {
-                showQuestion(data.question);
-            } else if (status === 'finished') {
-                showGameFinished();
-            }
-        }
-
-        // Show waiting state
-        function showWaitingState() {
-            console.log('Game is waiting to start...');
-
-            // Show waiting message
-            const waitingDiv = document.querySelector('.waiting-state') || document.querySelector('[data-state="waiting"]');
-            if (waitingDiv) {
-                waitingDiv.style.display = 'block';
-            }
-
-            // Hide question if visible
-            const questionDiv = document.querySelector('.question-container') || document.querySelector('[data-state="question"]');
-            if (questionDiv) {
-                questionDiv.style.display = 'none';
-            }
-        }
-
-        // Show question
-        function showQuestion(questionData) {
-            console.log('Showing question:', questionData.question_text);
-
-            // Stop polling when question appears (host will control transitions)
-            if (gameStateInterval) {
-                clearInterval(gameStateInterval);
-                gameStateInterval = null;
-            }
-
-            // Hide waiting state
-            const waitingDiv = document.querySelector('.waiting-state') || document.querySelector('[data-state="waiting"]');
-            if (waitingDiv) {
-                waitingDiv.style.display = 'none';
-            }
-
-            // Show question container
-            const questionDiv = document.querySelector('.question-container') || document.querySelector('[data-state="question"]');
-            if (questionDiv) {
-                questionDiv.style.display = 'block';
-            }
-
-            // Update question text
-            const questionText = document.querySelector('.question-text') || document.querySelector('[data-element="question"]');
-            if (questionText) {
-                questionText.textContent = questionData.question_text;
-            }
-
-            // Update answer options
-            updateAnswerOptions(questionData);
-        }
-
-        // Update answer options
-        function updateAnswerOptions(questionData) {
-            // Combine correct and wrong answers, then shuffle
-            const allAnswers = [questionData.correct_answer, ...questionData.wrong_answers];
-            const shuffledAnswers = shuffleArray([...allAnswers]);
-
-            // Find answer container
-            const answerContainer = document.querySelector('.answers-container') ||
-                                   document.querySelector('[data-element="answers"]') ||
-                                   document.querySelector('.answer-options');
-
-            if (answerContainer) {
-                answerContainer.innerHTML = '';
-
-                shuffledAnswers.forEach((answer, index) => {
-                    const button = document.createElement('button');
-                    button.className = 'answer-option btn btn-outline-primary';
-                    button.textContent = answer;
-                    button.onclick = () => selectAnswer(answer);
-                    answerContainer.appendChild(button);
-                });
-            } else {
-                console.warn('Answer container not found in DOM');
-            }
-        }
-
-        // Shuffle array
-        function shuffleArray(array) {
-            const shuffled = [...array];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        }
-
-        // Handle answer selection
-        function selectAnswer(selectedAnswer) {
-            console.log('Answer selected:', selectedAnswer);
-
-            // Disable all answer buttons
-            const answerButtons = document.querySelectorAll('.answer-option');
-            answerButtons.forEach(btn => {
-                btn.disabled = true;
-                if (btn.textContent === selectedAnswer) {
-                    btn.classList.add('selected');
-                }
-            });
-        }
-
-        // Show game finished
-        function showGameFinished() {
-            console.log('Game finished!');
-
-            // Stop polling
-            if (gameStateInterval) {
-                clearInterval(gameStateInterval);
-                gameStateInterval = null;
-            }
-
-            // Redirect to results or show final message
-            setTimeout(() => {
-                window.location.href = '/results/';
-            }, 2000);
-        }
-
-        // Start polling when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded, starting game polling...');
-            startGamePolling();
         });
-
-        // Debug: Make functions available globally
-        window.gameDebug = {
-            startPolling: startGamePolling,
-            checkGameState: checkGameState,
-            sessionId: () => currentSessionId
-        };
     </script>
 </body>
 </html>
