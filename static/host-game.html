@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Game - Quiz Platform</title>
     <style>
-        /* All existing styles remain the same */
         body {
             margin: 0;
             padding: 0;
@@ -176,6 +175,13 @@
             background: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
+        }
+
+        /* NEW: Auto-advance notification */
+        .notification.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
         }
 
         .loading-spinner {
@@ -377,6 +383,24 @@
             border-bottom: none;
         }
 
+        /* NEW: Auto-advance indicator */
+        .auto-advance-indicator {
+            background: #fbbf24;
+            color: #92400e;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+            animation: fadeInOut 3s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            10%, 90% { opacity: 1; }
+        }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -432,8 +456,13 @@
                 </div>
             </div>
 
-            <!-- GAME CONTROL INTERFACE - UPDATED FOR MANUAL CONTROL -->
+            <!-- GAME CONTROL INTERFACE -->
             <div class="game-controls" id="game-controls">
+                <!-- NEW: Auto-advance indicator -->
+                <div class="auto-advance-indicator" id="auto-advance-indicator">
+                    ⏰ Question auto-advanced due to time expiry
+                </div>
+
                 <div class="question-progress">
                     <div class="progress-header">
                         <div class="question-number" id="question-number">Question 1 of 5</div>
@@ -479,7 +508,6 @@
         const API_BASE = '/api';
         let csrfToken = '';
 
-        // Get CSRF token from cookies
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -502,10 +530,11 @@
                 this.gameStatus = 'waiting';
                 this.players = [];
                 this.refreshInterval = null;
-                this.gameStateInterval = null; // NEW: For game state polling
+                this.gameStateInterval = null;
                 this.currentQuestionIndex = 0;
                 this.totalQuestions = 5;
                 this.currentQuestion = null;
+                this.lastQuestionIndex = -1; // NEW: Track question changes
 
                 this.init();
             }
@@ -685,7 +714,6 @@
                     </div>
                 `).join('');
 
-                // Update start button
                 const startBtn = document.getElementById('start-game-btn');
                 const buttonText = document.getElementById('buttonText');
                 if (this.players.length > 0) {
@@ -707,9 +735,9 @@
                 }, 3000);
             }
 
-            // NEW: Start game state monitoring for host
+            // UPDATED: Enhanced game state monitoring with auto-advance detection
             startGameStateMonitoring() {
-                console.log('📊 Starting game state monitoring...');
+                console.log('📊 Starting enhanced game state monitoring...');
 
                 this.gameStateInterval = setInterval(async () => {
                     try {
@@ -720,6 +748,9 @@
                         if (response.ok) {
                             const gameState = await response.json();
                             this.updateHostInterface(gameState);
+
+                            // NEW: Check for auto-advance
+                            this.checkAutoAdvance(gameState);
                         }
                     } catch (error) {
                         console.error('❌ Game state monitoring error:', error);
@@ -727,7 +758,45 @@
                 }, 1000); // Update every second for host
             }
 
-            // NEW: Update host interface with real-time data
+            // NEW: Detect and handle auto-advance
+            checkAutoAdvance(gameState) {
+                const currentIndex = gameState.current_question_index || 0;
+
+                // Check if question changed and it was auto-advanced
+                if (currentIndex !== this.lastQuestionIndex && gameState.auto_advanced) {
+                    console.log(`⏰ Auto-advance detected: Question ${this.lastQuestionIndex + 1} → ${currentIndex + 1}`);
+
+                    // Show auto-advance notification
+                    this.showAutoAdvanceNotification();
+
+                    // Update current question
+                    this.currentQuestionIndex = currentIndex;
+                    this.loadCurrentQuestion();
+                }
+
+                // Update last known question index
+                this.lastQuestionIndex = currentIndex;
+
+                // Check if game finished due to auto-advance
+                if (gameState.status === 'finished' && gameState.final_scores) {
+                    this.showGameCompleted(gameState.final_scores);
+                }
+            }
+
+            // NEW: Show auto-advance notification
+            showAutoAdvanceNotification() {
+                const indicator = document.getElementById('auto-advance-indicator');
+                indicator.style.display = 'block';
+
+                // Show notification
+                this.showNotification('Question auto-advanced due to time expiry', 'warning');
+
+                // Hide indicator after animation
+                setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 3000);
+            }
+
             updateHostInterface(gameState) {
                 // Update timer display
                 const timeLeft = Math.ceil(gameState.time_left || 0);
@@ -742,7 +811,7 @@
                     timerElement.classList.remove('warning');
                 }
 
-                // Update responses count (you could track actual responses here)
+                // Update responses count
                 document.getElementById('responses-count').textContent =
                     `? / ${gameState.player_count} players responded`;
 
@@ -801,6 +870,7 @@
                             console.log('✅ Game started successfully on retry:', retryData);
                             this.gameStatus = 'active';
                             this.currentQuestionIndex = 0;
+                            this.lastQuestionIndex = 0; // NEW: Initialize tracking
                             await this.switchToGameInterface();
                             return;
                         }
@@ -813,6 +883,7 @@
 
                     this.gameStatus = 'active';
                     this.currentQuestionIndex = 0;
+                    this.lastQuestionIndex = 0; // NEW: Initialize tracking
                     await this.switchToGameInterface();
 
                 } catch (error) {
@@ -826,22 +897,17 @@
             async switchToGameInterface() {
                 console.log('🎮 Switching to game interface');
 
-                // Stop player refresh, start game state monitoring
                 if (this.refreshInterval) {
                     clearInterval(this.refreshInterval);
                 }
 
-                // Hide waiting interface, show game controls
                 document.getElementById('waiting-interface').style.display = 'none';
                 document.getElementById('game-controls').classList.add('active');
 
-                // Load current question
                 await this.loadCurrentQuestion();
+                this.startGameStateMonitoring(); // Start monitoring with auto-advance detection
 
-                // Start monitoring game state for real-time updates
-                this.startGameStateMonitoring();
-
-                this.showNotification('Game started! Players can now see the first question.', 'success');
+                this.showNotification('Game started! Questions will auto-advance when time expires.', 'success');
             }
 
             async loadCurrentQuestion() {
@@ -869,14 +935,11 @@
             displayCurrentQuestion() {
                 if (!this.currentQuestion) return;
 
-                // Update question number
                 document.getElementById('question-number').textContent =
                     `Question ${this.currentQuestionIndex + 1} of ${this.totalQuestions}`;
 
-                // Display question text
                 document.getElementById('current-question-text').textContent = this.currentQuestion.question_text;
 
-                // Display answer options
                 const answersContainer = document.getElementById('current-answer-options');
                 const allAnswers = [this.currentQuestion.correct_answer, ...this.currentQuestion.wrong_answers];
                 const labels = ['A', 'B', 'C', 'D'];
@@ -905,7 +968,7 @@
 
             async nextQuestion() {
                 try {
-                    console.log('⏭️ Host requesting next question');
+                    console.log('⏭️ Host manually requesting next question');
 
                     if (!csrfToken) {
                         await this.fetchCSRFToken();
@@ -932,8 +995,12 @@
                         this.showGameCompleted(data.final_scores || []);
                     } else {
                         this.currentQuestionIndex++;
+                        this.lastQuestionIndex = this.currentQuestionIndex; // Update tracking
                         await this.loadCurrentQuestion();
-                        console.log(`📝 Advanced to question ${this.currentQuestionIndex + 1}`);
+                        console.log(`📝 Manually advanced to question ${this.currentQuestionIndex + 1}`);
+
+                        // Show manual advance notification
+                        this.showNotification(`Advanced to Question ${this.currentQuestionIndex + 1}`, 'info');
                     }
 
                 } catch (error) {
@@ -943,7 +1010,6 @@
             }
 
             showGameCompleted(finalScores) {
-                // Stop monitoring
                 if (this.gameStateInterval) {
                     clearInterval(this.gameStateInterval);
                 }
@@ -993,7 +1059,7 @@
 
                 console.log(`📢 Notification (${type}): ${message}`);
 
-                if (type === 'success' || type === 'info') {
+                if (type === 'success' || type === 'info' || type === 'warning') {
                     setTimeout(() => {
                         notification.style.display = 'none';
                     }, 5000);
@@ -1014,7 +1080,6 @@
 
         let gameManager;
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 Page loaded, starting game manager...');
             gameManager = new GameHostManager();
@@ -1055,7 +1120,6 @@
         }
 
         function backToDashboard() {
-            // Clear game data to prevent role confusion
             localStorage.removeItem('playerData');
             localStorage.removeItem('sessionId');
             localStorage.removeItem('playerId');

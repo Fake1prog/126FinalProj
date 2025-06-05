@@ -570,52 +570,50 @@
       }
 
       startPolling() {
-        if (this.pollTimer) {
-          clearInterval(this.pollTimer);
-        }
-
-        // Poll every 2 seconds for updates
-        this.pollTimer = setInterval(async () => {
-          try {
-            if (!this.joinedData || !this.joinedData.session) return;
-
-            const response = await fetch(`${API_BASE}/sessions/${this.joinedData.session.id}/`, {
-              credentials: 'include'
-            });
-
-            if (!response.ok) throw new Error('Failed to get session data');
-
-            const sessionData = await response.json();
-
-            // Update player list
-            this.updatePlayerList(sessionData.players || []);
-
-            // Check if game has started
-            if (sessionData.status === 'active') {
-              // Game started, redirect to play page
+          if (this.pollTimer) {
               clearInterval(this.pollTimer);
-              console.log('Game started, redirecting to play page...');
-              this.showNotification('Game is starting! Redirecting...', 'info');
-
-              // 🚀 CRITICAL FIX: Include session ID in redirect URL
-              const sessionId = this.joinedData.session.id;
-              console.log(`✅ Redirecting with session ID: ${sessionId}`);
-
-              setTimeout(() => {
-                const sessionId = this.joinedData.session.id;
-                console.log(`✅ Redirecting with session ID: ${sessionId}`);
-                // OLD (causes session ID problem):
-                // window.location.href = '/play-game/';
-
-                // NEW (fixes session ID problem):
-                window.location.href = `/play-game/?session=${sessionId}`;
-              }, 1500);
-            }
-
-          } catch (error) {
-            console.error('Polling error:', error.message);
           }
-        }, 2000);
+
+          // Poll every 2 seconds for updates
+          this.pollTimer = setInterval(async () => {
+              try {
+                  if (!this.joinedData || !this.joinedData.session) return;
+
+                  const response = await fetch(`${API_BASE}/sessions/${this.joinedData.session.id}/`, {
+                      credentials: 'include'
+                  });
+
+                  if (!response.ok) throw new Error('Failed to get session data');
+
+                  const sessionData = await response.json();
+
+                  // Update player list
+                  this.updatePlayerList(sessionData.players || []);
+
+                  // Check if game has started
+                  if (sessionData.status === 'active') {
+                      // Game started, redirect to play page
+                      clearInterval(this.pollTimer);
+                      console.log('Game started, redirecting to play page...');
+                      this.showNotification('Game is starting! Redirecting...', 'info');
+
+                      // 🚀 CRITICAL FIX: Include session ID in redirect URL
+                      const sessionId = this.joinedData.session.id;
+                      console.log(`✅ Redirecting with session ID: ${sessionId}`);
+
+                      setTimeout(() => {
+                          // OLD (causes session ID problem):
+                          // window.location.href = '/play-game/';
+
+                          // NEW (fixes session ID problem):
+                          window.location.href = `/play-game/?session=${sessionId}`;
+                      }, 1500);
+                  }
+
+              } catch (error) {
+                  console.error('Polling error:', error.message);
+              }
+          }, 2000);
       }
 
       setLoadingState(loading) {

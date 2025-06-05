@@ -270,7 +270,7 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def game_state(self, request, pk=None):
-        """Get current game state with precise timing - REAL-TIME ENDPOINT"""
+        """Get current game state with precise timing """
         try:
             session = self.get_object()
 
@@ -280,6 +280,7 @@ class GameSessionViewSet(viewsets.ModelViewSet):
             current_question = None
             time_left = 0
             question_start_time = None
+            auto_advanced = False
 
             if session.status == 'active' and session.current_question_index < total_questions:
                 current_question = questions[session.current_question_index]
@@ -294,57 +295,40 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                 elapsed = (timezone.now() - question_start_time).total_seconds()
                 time_left = max(0, 20 - elapsed)  # 20 second questions
 
-            # Get active players with scores
-            players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+                # 🚀 AUTO-ADVANCE LOGIC: If time is up, automatically move to next question
+                if time_left <= 0:
+                    logger.info(
+                        f"⏰ Auto-advancing from question {session.current_question_index + 1} due to time expiry")
 
-            response_data = {
-                'session_id': session.id,
-                'status': session.status,
-                'current_question_index': session.current_question_index,
-                'total_questions': total_questions,
-                'time_left': round(time_left, 1),
-                'question_start_time': question_start_time.isoformat() if question_start_time else None,
-                'current_question': QuestionSerializer(current_question).data if current_question else None,
-                'players': PlayerSerializer(players, many=True).data,
-                'player_count': players.count(),
-                'server_time': timezone.now().isoformat()
-            }
+                    # Move to next question
+                    session.current_question_index += 1
 
-            return Response(response_data)
+                    # Check if quiz is complete
+                    if session.current_question_index >= total_questions:
+                        session.status = 'finished'
+                        session.ended_at = timezone.now()
+                        session.save()
 
-        except GameSession.DoesNotExist:
-            return Response(
-                {'error': 'Session not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+                        # Return final results
+                        players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+                        return Response({
+                            'session_id': session.id,
+                            'status': 'finished',
+                            'final_scores': PlayerSerializer(players, many=True).data,
+                            'server_time': timezone.now().isoformat()
+                        })
+                    else:
+                        # Start new question
+                        session.question_started_at = timezone.now()
+                        session.save()
 
-    @action(detail=True, methods=['get'])
-    def game_state(self, request, pk=None):
-        """Get current game state with precise timing - REAL-TIME ENDPOINT"""
-        try:
-            session = self.get_object()
+                        # Get new current question
+                        current_question = questions[session.current_question_index]
+                        question_start_time = session.question_started_at
+                        time_left = 20  # Fresh timer for new question
+                        auto_advanced = True
 
-            # Get current question with timing
-            questions = session.quiz.questions.all().order_by('order')
-            total_questions = questions.count()
-            current_question = None
-            time_left = 0
-            question_start_time = None
-
-            if session.status == 'active' and session.current_question_index < total_questions:
-                current_question = questions[session.current_question_index]
-
-                # Calculate time left based on when question started
-                # We'll store question_start_time in session (need to add this field)
-                # For now, calculate based on updated_at as approximate start time
-                if hasattr(session, 'question_started_at') and session.question_started_at:
-                    question_start_time = session.question_started_at
-                else:
-                    # Fallback to session updated time
-                    question_start_time = session.updated_at or timezone.now()
-
-                elapsed = (timezone.now() - question_start_time).total_seconds()
-                time_left = max(0, 20 - elapsed)  # 20 second questions
+                        logger.info(f"✅ Auto-advanced to question {session.current_question_index + 1}")
 
             # Get active players with scores
             players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
@@ -359,7 +343,8 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                 'current_question': QuestionSerializer(current_question).data if current_question else None,
                 'players': PlayerSerializer(players, many=True).data,
                 'player_count': players.count(),
-                'server_time': timezone.now().isoformat()
+                'server_time': timezone.now().isoformat(),
+                'auto_advanced': auto_advanced  # NEW: Flag to indicate auto-advance happened
             }
 
             return Response(response_data)
@@ -408,7 +393,7 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def next_question(self, request, pk=None):
-        """Move to the next question (host only) - UPDATED WITH TIMING"""
+        """Move to the next question (host only) """
         session = self.get_object()
 
         # Check if user is the host
@@ -418,11 +403,27 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
+        # Get current state to avoid race conditions
+        total_questions = session.quiz.questions.count()
+
+        # If already at or past the last question, don't advance further
+        if session.current_question_index >= total_questions - 1:
+            # Mark as finished
+            session.status = 'finished'
+            session.ended_at = timezone.now()
+            session.save()
+
+            # Return final results
+            players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+            return Response({
+                'status': 'Quiz completed',
+                'final_scores': PlayerSerializer(players, many=True).data
+            })
+
         # Increment question index
         session.current_question_index += 1
 
-        # Check if quiz is complete
-        total_questions = session.quiz.questions.count()
+        # Check if quiz is complete after increment
         if session.current_question_index >= total_questions:
             session.status = 'finished'
             session.ended_at = timezone.now()
@@ -442,12 +443,15 @@ class GameSessionViewSet(viewsets.ModelViewSet):
         # Get current question
         current_question = session.quiz.questions.all().order_by('order')[session.current_question_index]
 
+        logger.info(f"🎮 Host manually advanced to question {session.current_question_index + 1}")
+
         return Response({
             'current_question': QuestionSerializer(current_question).data,
             'question_number': session.current_question_index + 1,
             'total_questions': total_questions,
             'question_started_at': timezone.now().isoformat(),
-            'server_time': timezone.now().isoformat()
+            'server_time': timezone.now().isoformat(),
+            'manually_advanced': True  # NEW: Flag to indicate manual advance
         })
 
     @action(detail=True, methods=['get'])
