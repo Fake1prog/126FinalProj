@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
 import logging
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from .models import Quiz, Question, GameSession, Player, PlayerAnswer
 from .serializers import (
@@ -27,18 +29,63 @@ class QuizViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Filter quizzes based on user"""
         queryset = super().get_queryset()
-        if self.action == 'list':
-            # Only show user's own quizzes in list view
-            return queryset.filter(host=self.request.user)
-        return queryset
+
+        # Always filter by current user for all actions
+        user_quizzes = queryset.filter(host=self.request.user).order_by('-created_at')
+
+        logger.info(f"User {self.request.user.username} requesting quizzes")
+        logger.info(f"Found {user_quizzes.count()} quizzes for user")
+
+        return user_quizzes
+
+    def list(self, request, *args, **kwargs):
+        """Override list to add detailed logging"""
+        logger.info(f"LIST request from user: {request.user}")
+        logger.info(f"User authenticated: {request.user.is_authenticated}")
+
+        if not request.user.is_authenticated:
+            logger.error("User not authenticated for quiz list")
+            return Response(
+                {'error': 'Authentication required'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        queryset = self.get_queryset()
+        logger.info(f"Queryset count: {queryset.count()}")
+
+        # Debug: List all quizzes for this user
+        for quiz in queryset:
+            logger.info(f"Quiz: {quiz.id} - {quiz.title} - Host: {quiz.host.username}")
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        response_data = {
+            'results': serializer.data,
+            'count': len(serializer.data),
+            'user': request.user.username
+        }
+
+        logger.info(f"Returning {len(serializer.data)} quizzes")
+        return Response(response_data)
 
     def perform_create(self, serializer):
         """Set the host to the current user"""
-        serializer.save(host=self.request.user)
+        logger.info(f"Creating quiz for user: {self.request.user}")
+        quiz = serializer.save(host=self.request.user)
+        logger.info(f"Quiz created with ID: {quiz.id}, Host: {quiz.host.username}")
 
     @action(detail=False, methods=['post'], serializer_class=QuizCreateSerializer)
     def create_with_ai(self, request):
         """Create a quiz with AI-generated questions"""
+        logger.info(f"AI Quiz creation request from user: {request.user}")
+
+        if not request.user.is_authenticated:
+            logger.error("User not authenticated for AI quiz creation")
+            return Response(
+                {'error': 'Authentication required'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -46,6 +93,8 @@ class QuizViewSet(viewsets.ModelViewSet):
         title = serializer.validated_data['title']
         topic = serializer.validated_data['topic']
         difficulty = serializer.validated_data.get('difficulty', 'medium')
+
+        logger.info(f"Creating AI quiz: {title} about {topic} ({difficulty})")
 
         try:
             with transaction.atomic():
@@ -57,14 +106,17 @@ class QuizViewSet(viewsets.ModelViewSet):
                     difficulty=difficulty
                 )
 
+                logger.info(f"Quiz created: ID={quiz.id}, Host={quiz.host.username}")
+
                 # Generate questions with AI
                 ai_service = QuizAIService()
                 try:
                     questions_data = ai_service.generate_quiz_questions(
                         topic=topic,
                         difficulty=difficulty,
-                        num_questions=10
+                        num_questions=5
                     )
+                    logger.info(f"AI generated {len(questions_data)} questions")
                 except Exception as e:
                     logger.warning(f"AI service failed, using sample questions: {str(e)}")
                     # Fallback to sample questions
@@ -72,20 +124,26 @@ class QuizViewSet(viewsets.ModelViewSet):
 
                 # Create question objects
                 for idx, q_data in enumerate(questions_data):
-                    Question.objects.create(
+                    question = Question.objects.create(
                         quiz=quiz,
                         question_text=q_data['question'],
                         correct_answer=q_data['correct_answer'],
                         wrong_answers=q_data['wrong_answers'],
                         order=idx
                     )
+                    logger.info(f"Created question {idx + 1}: {question.question_text[:50]}...")
 
-                # Update user stats
-                request.user.total_quizzes_hosted += 1
-                request.user.save()
+                # Update user stats (if field exists)
+                try:
+                    request.user.total_quizzes_hosted = getattr(request.user, 'total_quizzes_hosted', 0) + 1
+                    request.user.save()
+                    logger.info(f"Updated user stats: {request.user.total_quizzes_hosted} total quizzes")
+                except Exception as e:
+                    logger.warning(f"Could not update user stats: {e}")
 
                 # Return the created quiz with questions
                 quiz_serializer = QuizSerializer(quiz)
+                logger.info(f"Quiz creation successful: {quiz.title} (ID: {quiz.id})")
                 return Response(quiz_serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -100,8 +158,11 @@ class QuizViewSet(viewsets.ModelViewSet):
         """Start a new game session for a quiz"""
         quiz = self.get_object()
 
+        logger.info(f"Starting session for quiz: {quiz.id} by user: {request.user}")
+
         # Check if quiz has questions
         if not quiz.questions.exists():
+            logger.error(f"Quiz {quiz.id} has no questions")
             return Response(
                 {'error': 'Quiz has no questions'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -109,6 +170,7 @@ class QuizViewSet(viewsets.ModelViewSet):
 
         # Create new session
         session = GameSession.objects.create(quiz=quiz)
+        logger.info(f"Session created: {session.id} for quiz: {quiz.id}")
 
         serializer = GameSessionSerializer(session)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -120,6 +182,7 @@ class QuizViewSet(viewsets.ModelViewSet):
         quiz.is_active = False
         quiz.save()
 
+        logger.info(f"Quiz {quiz.id} deactivated by user: {request.user}")
         return Response({'status': 'Quiz deactivated'})
 
 
@@ -129,21 +192,38 @@ class GameSessionViewSet(viewsets.ModelViewSet):
     serializer_class = GameSessionSerializer
     permission_classes = [AllowAny]  # Allow anyone to join games
 
+    @method_decorator(csrf_exempt)
     @action(detail=False, methods=['post'], serializer_class=JoinQuizSerializer)
     def join(self, request):
         """Join a quiz session with a join code"""
+        print(f"JOIN REQUEST: {request.data}")  # Debug log
+
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            print(f"SERIALIZER ERRORS: {serializer.errors}")  # Debug log
+            return Response(
+                {'error': f'Invalid data: {serializer.errors}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         join_code = serializer.validated_data['join_code']
         nickname = serializer.validated_data['nickname']
 
+        print(f"LOOKING FOR QUIZ: join_code={join_code}, nickname={nickname}")  # Debug log
+
         # Find active quiz with this code
-        quiz = get_object_or_404(
-            Quiz,
-            join_code=join_code.upper(),
-            is_active=True
-        )
+        try:
+            quiz = Quiz.objects.get(
+                join_code=join_code.upper(),
+                is_active=True
+            )
+            print(f"FOUND QUIZ: {quiz.title} (ID: {quiz.id})")  # Debug log
+        except Quiz.DoesNotExist:
+            print(f"QUIZ NOT FOUND: {join_code}")  # Debug log
+            return Response(
+                {'error': f'Quiz with code {join_code} not found or inactive'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         # Get or create active session
         session = GameSession.objects.filter(
@@ -153,33 +233,50 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
         if not session:
             session = GameSession.objects.create(quiz=quiz)
+            print(f"CREATED NEW SESSION: {session.id}")  # Debug log
+        else:
+            print(f"USING EXISTING SESSION: {session.id}")  # Debug log
 
         # Check if nickname already exists in session
         if session.players.filter(nickname=nickname).exists():
+            print(f"NICKNAME ALREADY EXISTS: {nickname}")  # Debug log
             return Response(
-                {'error': 'Nickname already taken in this session'},
+                {'error': f'Nickname "{nickname}" already taken in this session'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         # Create player
-        player = Player.objects.create(
-            session=session,
-            nickname=nickname
-        )
+        try:
+            player = Player.objects.create(
+                session=session,
+                nickname=nickname
+            )
+            print(f"CREATED PLAYER: {player.nickname} (ID: {player.id})")  # Debug log
+        except Exception as e:
+            print(f"ERROR CREATING PLAYER: {str(e)}")  # Debug log
+            return Response(
+                {'error': f'Failed to create player: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         # Return player and session info
-        return Response({
+        response_data = {
             'player': PlayerSerializer(player).data,
             'session': GameSessionSerializer(session).data
-        }, status=status.HTTP_201_CREATED)
+        }
+        print(f"JOIN SUCCESS: {response_data}")  # Debug log
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])
     def start_game(self, request, pk=None):
         """Start the game (host only)"""
         session = self.get_object()
+        print(f"START GAME REQUEST for session: {session.id}")  # Debug log
 
         # Check if user is the host
         if request.user != session.quiz.host:
+            print(f"UNAUTHORIZED START GAME: {request.user} is not {session.quiz.host}")  # Debug log
             return Response(
                 {'error': 'Only the host can start the game'},
                 status=status.HTTP_403_FORBIDDEN
@@ -187,6 +284,7 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
         # Check if there are players
         if not session.players.exists():
+            print(f"NO PLAYERS IN SESSION: {session.id}")  # Debug log
             return Response(
                 {'error': 'No players have joined yet'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -196,13 +294,14 @@ class GameSessionViewSet(viewsets.ModelViewSet):
         session.status = 'active'
         session.started_at = timezone.now()
         session.save()
+        print(f"GAME STARTED for session: {session.id}")  # Debug log
 
         # Get first question
         first_question = session.quiz.questions.first()
 
         return Response({
             'status': 'Game started',
-            'current_question': QuestionSerializer(first_question).data
+            'current_question': QuestionSerializer(first_question).data if first_question else None
         })
 
     @action(detail=True, methods=['post'])
@@ -250,13 +349,44 @@ class GameSessionViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def leaderboard(self, request, pk=None):
         """Get current leaderboard"""
-        session = self.get_object()
-        players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+        print(f"LEADERBOARD REQUEST for session: {pk}")  # Debug log
 
-        return Response({
-            'leaderboard': PlayerSerializer(players, many=True).data,
-            'session_status': session.status
-        })
+        try:
+            # Make sure we get the session correctly
+            session = self.get_object()
+            print(f"LEADERBOARD SESSION FOUND: {session.id} for quiz {session.quiz.title}")  # Debug log
+
+            # Get players with explicit filtering
+            players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+            print(f"LEADERBOARD PLAYERS FOUND: {players.count()}")  # Debug log
+
+            # Log each player for debugging
+            for player in players:
+                print(f"  PLAYER: {player.nickname}, Score: {player.score}, Active: {player.is_active}")
+
+            response_data = {
+                'leaderboard': PlayerSerializer(players, many=True).data,
+                'session_status': session.status,
+                'session_id': session.id,
+                'quiz_title': session.quiz.title,
+                'total_players': players.count()
+            }
+
+            print(f"LEADERBOARD RESPONSE: {response_data}")  # Debug log
+            return Response(response_data)
+
+        except GameSession.DoesNotExist:
+            print(f"LEADERBOARD ERROR: Session {pk} does not exist")  # Debug log
+            return Response(
+                {'error': f'Session {pk} not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"LEADERBOARD ERROR: {str(e)}")  # Debug log
+            return Response(
+                {'error': f'Server error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
@@ -338,3 +468,48 @@ class PlayerViewSet(viewsets.ModelViewSet):
             'answers': PlayerAnswerSerializer(answers, many=True).data,
             'quiz_title': player.session.quiz.title
         })
+
+
+# Add test endpoint for debugging
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def test_ai_service(request):
+    """Test endpoint to debug AI question generation"""
+    try:
+        data = json.loads(request.body)
+        topic = data.get('topic', 'Science')
+        difficulty = data.get('difficulty', 'medium')
+
+        logger.info(f"Testing AI service with topic: {topic}, difficulty: {difficulty}")
+
+        ai_service = QuizAIService()
+
+        # Test the AI service
+        questions = ai_service.generate_quiz_questions(
+            topic=topic,
+            difficulty=difficulty,
+            num_questions=3  # Test with fewer questions
+        )
+
+        return JsonResponse({
+            'success': True,
+            'topic': topic,
+            'difficulty': difficulty,
+            'questions_generated': len(questions),
+            'questions': questions,
+            'api_key_configured': bool(ai_service.api_key),
+            'model_used': ai_service.model
+        })
+
+    except Exception as e:
+        logger.error(f"AI service test error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
