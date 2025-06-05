@@ -1,76 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Dashboard - Quiz Show Platform</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Dashboard - Quiz Show Platform</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Embedded CSS for Dashboard Style -->
+    <style>
+      body {
+        margin: 0;
+        font-family: "Display", sans-serif;
+        min-height: 100vh;
+        color: #22223b;
 
-  <!-- Embedded CSS for Dashboard Style -->
-  <style>
-  body {
-  margin: 0;
-  font-family: 'Display', sans-serif;
-  min-height: 100vh;
-  color: #22223b;
+        background: url("/static/images/dash_bg.png"); /* Replace with your actual image path */
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
 
-  background: 
-    url('/static/images/dash_bg.png'); /* Replace with your actual image path */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        box-sizing: border-box;
+      }
 
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2rem 3rem 1rem 2rem;
+        background: transparent;
+        box-shadow: none;
+      }
 
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 2rem 3rem 1rem 2rem;
-      background: transparent;
-      box-shadow: none;
-    }
+      nav h2 {
+        font-size: 2rem;
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -1px;
+        color: #22223b;
+      }
 
-    nav h2 {
-      font-size: 2rem;
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: -1px;
-      color: #22223b;
-    }
+      nav a {
+        text-decoration: none;
+        font-size: 2rem;
+        margin-right: 1rem;
+        color: #22223b;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      nav a:hover {
+        color: #4a3aff;
+      }
 
-    nav a {
-      text-decoration: none;
-      font-size: 2rem;
-      margin-right: 1rem;
-      color: #22223b;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    nav a:hover {
-      color: #4A3AFF;
-    }
-
-    .primary-btn {
-      background-color: #4A3AFF;
-      color: #fff;
-      padding: 0.75rem 2rem;
-      border: none;
-      border-radius: 24px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 2px 10px rgba(74,58,255,0.12);
-      transition: background 0.2s;
-    }
-    .primary-btn:hover {
-      background-color: #3727c3;
-    }
+      .primary-btn {
+        background-color: #4a3aff;
+        color: #fff;
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 24px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(74, 58, 255, 0.12);
+        transition: background 0.2s;
+      }
+      .primary-btn:hover {
+        background-color: #3727c3;
+      }
 
       main {
         max-width: 1200px;
@@ -116,8 +114,12 @@
       }
 
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
 
       /* Error State */
@@ -292,7 +294,7 @@
         </div>
 
         <!-- Error State -->
-        <div class="error-state" id="error-state" style="display: none;">
+        <div class="error-state" id="error-state" style="display: none">
           <div class="error-message" id="error-message">
             Failed to load quizzes. Please try again.
           </div>
@@ -300,10 +302,12 @@
         </div>
 
         <!-- Empty State -->
-        <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="empty-state" id="empty-state" style="display: none">
           <div class="empty-icon">📝</div>
           <div class="empty-title">No quizzes yet</div>
-          <div class="empty-subtitle">Create your first quiz to get started!</div>
+          <div class="empty-subtitle">
+            Create your first quiz to get started!
+          </div>
           <button
             class="primary-btn"
             onclick="window.location.href='/create-quiz/'"
@@ -313,25 +317,27 @@
         </div>
 
         <!-- Quiz Grid -->
-        <div id="my-quizzes" class="quiz-grid" style="display: none;">
+        <div id="my-quizzes" class="quiz-grid" style="display: none">
           <!-- Quizzes will be loaded here -->
         </div>
       </section>
     </main>
 
     <script>
-      const API_BASE = '/api';
+      const API_BASE = "/api";
       let debugMode = false;
 
       // Get CSRF token from cookies
       function getCookie(name) {
         let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";");
           for (let i = 0; i < cookies.length; i++) {
             const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1)
+              );
               break;
             }
           }
@@ -341,83 +347,87 @@
 
       function toggleDebug() {
         debugMode = !debugMode;
-        const panel = document.getElementById('debug-panel');
+        const panel = document.getElementById("debug-panel");
         if (debugMode) {
-          panel.classList.add('show');
+          panel.classList.add("show");
           updateDebugInfo();
         } else {
-          panel.classList.remove('show');
+          panel.classList.remove("show");
         }
       }
 
       function updateDebugInfo() {
-        document.getElementById('debug-username').textContent = localStorage.getItem('username') || 'Not set';
-        document.getElementById('debug-userid').textContent = localStorage.getItem('userId') || 'Not set';
+        document.getElementById("debug-username").textContent =
+          localStorage.getItem("username") || "Not set";
+        document.getElementById("debug-userid").textContent =
+          localStorage.getItem("userId") || "Not set";
       }
 
       async function checkAuthentication() {
         try {
           const response = await fetch(`${API_BASE}/auth/user/`, {
-            credentials: 'include'
+            credentials: "include",
           });
 
           if (!response.ok) {
-            console.log('User not authenticated, redirecting to login');
-            window.location.href = '/login/';
+            console.log("User not authenticated, redirecting to login");
+            window.location.href = "/login/";
             return false;
           }
 
           const userData = await response.json();
-          console.log('User authenticated:', userData);
+          console.log("User authenticated:", userData);
 
           // Update localStorage if needed
           if (userData.username && userData.id) {
-            localStorage.setItem('username', userData.username);
-            localStorage.setItem('userId', userData.id);
+            localStorage.setItem("username", userData.username);
+            localStorage.setItem("userId", userData.id);
           }
 
           return true;
         } catch (error) {
-          console.error('Authentication check failed:', error);
-          window.location.href = '/login/';
+          console.error("Authentication check failed:", error);
+          window.location.href = "/login/";
           return false;
         }
       }
 
       async function loadQuizzes() {
-        console.log('Loading quizzes...');
+        console.log("Loading quizzes...");
 
         // Show loading state
-        showState('loading');
+        showState("loading");
 
         try {
           // Check authentication first
           const isAuth = await checkAuthentication();
           if (!isAuth) return;
 
-          console.log('Making API request to fetch quizzes...');
+          console.log("Making API request to fetch quizzes...");
           const response = await fetch(`${API_BASE}/quizzes/`, {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken')
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCookie("csrftoken"),
             },
-            credentials: 'include'
+            credentials: "include",
           });
 
-          console.log('API Response status:', response.status);
+          console.log("API Response status:", response.status);
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error('API Error:', response.status, errorText);
+            console.error("API Error:", response.status, errorText);
 
             if (debugMode) {
-              document.getElementById('debug-response').textContent = `${response.status}: ${errorText}`;
+              document.getElementById(
+                "debug-response"
+              ).textContent = `${response.status}: ${errorText}`;
             }
 
             if (response.status === 401 || response.status === 403) {
-              console.log('Authentication failed, redirecting to login');
-              window.location.href = '/login/';
+              console.log("Authentication failed, redirecting to login");
+              window.location.href = "/login/";
               return;
             }
 
@@ -425,10 +435,11 @@
           }
 
           const data = await response.json();
-          console.log('Quizzes loaded successfully:', data);
+          console.log("Quizzes loaded successfully:", data);
 
           if (debugMode) {
-            document.getElementById('debug-response').textContent = JSON.stringify(data, null, 2);
+            document.getElementById("debug-response").textContent =
+              JSON.stringify(data, null, 2);
           }
 
           // Handle different response formats
@@ -440,50 +451,57 @@
           } else if (data.quizzes && Array.isArray(data.quizzes)) {
             quizzes = data.quizzes;
           } else {
-            console.warn('Unexpected data format:', data);
+            console.warn("Unexpected data format:", data);
             quizzes = [];
           }
 
-          console.log('Processed quizzes:', quizzes);
+          console.log("Processed quizzes:", quizzes);
 
           // Update total count
-          document.getElementById('total-quizzes').textContent = quizzes.length;
+          document.getElementById("total-quizzes").textContent = quizzes.length;
 
           if (quizzes.length === 0) {
-            showState('empty');
+            showState("empty");
           } else {
             displayQuizzes(quizzes);
-            showState('content');
+            showState("content");
           }
-
         } catch (error) {
-          console.error('Error loading quizzes:', error);
+          console.error("Error loading quizzes:", error);
 
           if (debugMode) {
-            document.getElementById('debug-error').textContent = error.message;
+            document.getElementById("debug-error").textContent = error.message;
           }
 
-          document.getElementById('error-message').textContent =
-            'Failed to load quizzes: ' + error.message;
-          showState('error');
+          document.getElementById("error-message").textContent =
+            "Failed to load quizzes: " + error.message;
+          showState("error");
         }
       }
 
       function displayQuizzes(quizzes) {
-        const container = document.getElementById('my-quizzes');
+        const container = document.getElementById("my-quizzes");
 
-        container.innerHTML = quizzes.map(quiz => {
-          const createdDate = quiz.created_at ?
-            new Date(quiz.created_at).toLocaleDateString() : 'Unknown';
+        container.innerHTML = quizzes
+          .map((quiz) => {
+            const createdDate = quiz.created_at
+              ? new Date(quiz.created_at).toLocaleDateString()
+              : "Unknown";
 
-          return `
+            return `
             <div class="quiz-card">
-              <div class="quiz-title">${quiz.title || 'Untitled Quiz'}</div>
+              <div class="quiz-title">${quiz.title || "Untitled Quiz"}</div>
               <div class="quiz-info">
-                <span><strong>Topic:</strong> ${quiz.topic || 'No topic'}</span>
-                <span><strong>Difficulty:</strong> ${quiz.difficulty || 'Medium'}</span>
-                <span><strong>Join Code:</strong> <strong>${quiz.join_code || 'N/A'}</strong></span>
-                <span><strong>Questions:</strong> ${quiz.questions?.length || 0}</span>
+                <span><strong>Topic:</strong> ${quiz.topic || "No topic"}</span>
+                <span><strong>Difficulty:</strong> ${
+                  quiz.difficulty || "Medium"
+                }</span>
+                <span><strong>Join Code:</strong> <strong>${
+                  quiz.join_code || "N/A"
+                }</strong></span>
+                <span><strong>Questions:</strong> ${
+                  quiz.questions?.length || 0
+                }</span>
                 <span><strong>Created:</strong> ${createdDate}</span>
               </div>
               <div class="quiz-actions">
@@ -502,61 +520,65 @@
               </div>
             </div>
           `;
-        }).join('');
+          })
+          .join("");
       }
 
       function showState(state) {
         // Hide all states
-        document.getElementById('loading-state').style.display = 'none';
-        document.getElementById('error-state').style.display = 'none';
-        document.getElementById('empty-state').style.display = 'none';
-        document.getElementById('my-quizzes').style.display = 'none';
+        document.getElementById("loading-state").style.display = "none";
+        document.getElementById("error-state").style.display = "none";
+        document.getElementById("empty-state").style.display = "none";
+        document.getElementById("my-quizzes").style.display = "none";
 
         // Show requested state
-        switch(state) {
-          case 'loading':
-            document.getElementById('loading-state').style.display = 'block';
+        switch (state) {
+          case "loading":
+            document.getElementById("loading-state").style.display = "block";
             break;
-          case 'error':
-            document.getElementById('error-state').style.display = 'block';
+          case "error":
+            document.getElementById("error-state").style.display = "block";
             break;
-          case 'empty':
-            document.getElementById('empty-state').style.display = 'block';
+          case "empty":
+            document.getElementById("empty-state").style.display = "block";
             break;
-          case 'content':
-            document.getElementById('my-quizzes').style.display = 'flex';
+          case "content":
+            document.getElementById("my-quizzes").style.display = "flex";
             break;
         }
       }
 
       function hostQuiz(quizId, joinCode) {
-        console.log('Hosting quiz:', quizId, joinCode);
+        console.log("Hosting quiz:", quizId, joinCode);
 
         // Clear any existing game data
-        localStorage.removeItem('playerData');
-        localStorage.removeItem('sessionId');
-        localStorage.removeItem('playerId');
+        localStorage.removeItem("playerData");
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("playerId");
 
         // Set current quiz data
-        localStorage.setItem('currentQuizId', quizId);
-        localStorage.setItem('currentQuizCode', joinCode);
+        localStorage.setItem("currentQuizId", quizId);
+        localStorage.setItem("currentQuizCode", joinCode);
 
         // Navigate to host game
         window.location.href = `/host-game/?quiz_id=${quizId}`;
       }
 
       function copyJoinCode(joinCode) {
-        if (!joinCode || joinCode === 'N/A') {
-          alert('No join code available');
+        if (!joinCode || joinCode === "N/A") {
+          alert("No join code available");
           return;
         }
 
         if (navigator.clipboard && window.isSecureContext) {
-          navigator.clipboard.writeText(joinCode).then(() => {
-            showNotification('Join code copied to clipboard!');
-          }).catch(() => {
-            fallbackCopyTextToClipboard(joinCode);
-          });
+          navigator.clipboard
+            .writeText(joinCode)
+            .then(() => {
+              showNotification("Join code copied to clipboard!");
+            })
+            .catch(() => {
+              fallbackCopyTextToClipboard(joinCode);
+            });
         } else {
           fallbackCopyTextToClipboard(joinCode);
         }
@@ -574,10 +596,10 @@
         textArea.select();
 
         try {
-          document.execCommand('copy');
-          showNotification('Join code copied to clipboard!');
+          document.execCommand("copy");
+          showNotification("Join code copied to clipboard!");
         } catch (err) {
-          alert('Failed to copy join code: ' + text);
+          alert("Failed to copy join code: " + text);
         }
 
         document.body.removeChild(textArea);
@@ -585,7 +607,7 @@
 
       function showNotification(message) {
         // Create notification
-        const notification = document.createElement('div');
+        const notification = document.createElement("div");
         notification.style.cssText = `
           position: fixed;
           top: 20px;
@@ -608,8 +630,8 @@
       }
 
       // Initialize dashboard
-      document.addEventListener('DOMContentLoaded', () => {
-        console.log('Dashboard loaded, loading quizzes...');
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("Dashboard loaded, loading quizzes...");
         loadQuizzes();
         updateDebugInfo();
       });

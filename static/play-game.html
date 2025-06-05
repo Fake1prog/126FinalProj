@@ -1,1392 +1,1529 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Play Quiz - Quiz Show Platform</title>
     <style>
-        /* Keep all your existing styles - no changes needed */
+      /* Keep all your existing styles - no changes needed */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: url("/static/images/dash_bg.png") center/cover no-repeat;
+        min-height: 100vh;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+      }
+
+      .main-container {
+        width: 100%;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .game-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        padding: 24px;
+        margin-bottom: 15px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      /* Compact Player Header */
+      .player-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 20px;
+      }
+
+      .player-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .player-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        font-weight: bold;
+      }
+
+      .player-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .score-display {
+        text-align: right;
+      }
+
+      .score-label {
+        font-size: 0.8rem;
+        color: #6b7280;
+        margin-bottom: 2px;
+      }
+
+      .score-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #6366f1;
+      }
+
+      /* Compact Progress Section */
+      .progress-section {
+        margin-bottom: 20px;
+      }
+
+      .progress-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .question-progress {
+        font-size: 1rem;
+        color: #6b7280;
+        font-weight: 500;
+      }
+
+      .timer-display {
+        background: #fef3c7;
+        color: #d97706;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        min-width: 70px;
+        text-align: center;
+      }
+
+      .timer-display.warning {
+        background: #fecaca;
+        color: #dc2626;
+        animation: pulse 1s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .progress-bar {
+        background: #e5e7eb;
+        height: 6px;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        height: 100%;
+        transition: width 0.3s ease;
+      }
+
+      /* Compact Waiting State */
+      .waiting-state {
+        text-align: center;
+        padding: 40px 15px;
+      }
+
+      .waiting-animation {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        animation: bounce 1.5s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-15px);
+        }
+      }
+
+      .waiting-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #1f2937;
+      }
+
+      .waiting-subtitle {
+        font-size: 1rem;
+        color: #6b7280;
+        margin-bottom: 20px;
+      }
+
+      /* Compact Question Display */
+      .question-section {
+        display: none;
+      }
+
+      .question-section.active {
+        display: block;
+      }
+
+      .question-header {
+        margin-bottom: 20px;
+      }
+
+      .question-text {
+        font-size: 1.4rem;
+        line-height: 1.4;
+        color: #1f2937;
+        background: #f8fafc;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 4px solid #6366f1;
+        margin-bottom: 20px;
+      }
+
+      .answers-container {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .answer-option {
+        background: #f8fafc;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .answer-option:hover {
+        background: #e0e7ff;
+        border-color: #6366f1;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
+      }
+
+      .answer-option.selected {
+        background: #e0e7ff;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+      }
+
+      .answer-option.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .answer-option.correct {
+        background: #dcfce7;
+        border-color: #16a34a;
+      }
+
+      .answer-option.incorrect {
+        background: #fecaca;
+        border-color: #dc2626;
+      }
+
+      .answer-label {
+        background: #6366f1;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
+
+      .answer-text {
+        font-size: 1rem;
+        color: #374151;
+        flex-grow: 1;
+      }
+
+      .submit-button {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+      }
+
+      .submit-button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+      }
+
+      .submit-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      /* Compact Feedback Section */
+      .feedback-section {
+        display: none;
+        text-align: center;
+        padding: 30px 15px;
+      }
+
+      .feedback-section.active {
+        display: block;
+      }
+
+      .feedback-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+      }
+
+      .feedback-title {
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .feedback-title.correct {
+        color: #16a34a;
+      }
+
+      .feedback-title.incorrect {
+        color: #dc2626;
+      }
+
+      .feedback-details {
+        font-size: 1rem;
+        color: #6b7280;
+        margin-bottom: 8px;
+      }
+
+      .score-earned {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #6366f1;
+        margin-bottom: 15px;
+      }
+
+      .correct-answer {
+        background: #dcfce7;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        font-size: 0.95rem;
+      }
+
+      .waiting-next {
+        color: #6b7280;
+        font-style: italic;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+      }
+
+      /* Compact Leaderboard */
+      .mini-leaderboard {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 15px;
+      }
+
+      .mini-leaderboard h4 {
+        text-align: center;
+        margin-bottom: 12px;
+        color: #1f2937;
+        font-size: 1.1rem;
+      }
+
+      .leaderboard-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 0.95rem;
+      }
+
+      .leaderboard-item:last-child {
+        border-bottom: none;
+      }
+
+      .leaderboard-item.current-player {
+        background: #e0e7ff;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 2px solid #6366f1;
+      }
+
+      .player-rank {
+        font-weight: bold;
+        color: #6366f1;
+        margin-right: 8px;
+      }
+
+      .leaderboard-name {
+        flex-grow: 1;
+        font-weight: 500;
+      }
+
+      .leaderboard-score {
+        font-weight: bold;
+        color: #059669;
+      }
+
+      /* Compact Final Results */
+      .final-results {
+        display: none;
+        text-align: center;
+        padding: 30px 15px;
+      }
+
+      .final-results.active {
+        display: block;
+      }
+
+      .final-trophy {
+        font-size: 3rem;
+        margin-bottom: 15px;
+      }
+
+      .final-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #1f2937;
+      }
+
+      .final-score {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #6366f1;
+        margin-bottom: 8px;
+      }
+
+      .final-rank {
+        font-size: 1.1rem;
+        color: #6b7280;
+        margin-bottom: 20px;
+      }
+
+      .play-again-btn {
+        background: white;
+        color: #6366f1;
+        border: 2px solid #6366f1;
+        padding: 14px 32px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+      }
+
+      .play-again-btn:hover {
+        background: #6366f1;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+      }
+
+      /* Debug Panel */
+      .debug-panel {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        z-index: 1000;
+        max-width: 300px;
+        display: none;
+      }
+
+      .debug-panel.active {
+        display: block;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: url("/static/images/dash_bg.png") center/cover no-repeat;
-            min-height: 100vh;
-            color: #1f2937;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px;
+          padding: 5px;
         }
 
         .main-container {
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto;
+          padding: 0;
         }
 
         .game-card {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            padding: 24px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(0,0,0,0.05);
+          padding: 18px;
+          border-radius: 12px;
         }
 
-        /* Compact Player Header */
         .player-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e7eb;
-            margin-bottom: 20px;
-        }
-
-        .player-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .player-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            font-weight: bold;
-        }
-
-        .player-name {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .score-display {
-            text-align: right;
-        }
-
-        .score-label {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-bottom: 2px;
-        }
-
-        .score-value {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #6366f1;
-        }
-
-        /* Compact Progress Section */
-        .progress-section {
-            margin-bottom: 20px;
+          flex-direction: column;
+          gap: 10px;
+          text-align: center;
+          padding: 10px 0;
         }
 
         .progress-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .question-progress {
-            font-size: 1rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .timer-display {
-            background: #fef3c7;
-            color: #d97706;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            min-width: 70px;
-            text-align: center;
-        }
-
-        .timer-display.warning {
-            background: #fecaca;
-            color: #dc2626;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .progress-bar {
-            background: #e5e7eb;
-            height: 6px;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        /* Compact Waiting State */
-        .waiting-state {
-            text-align: center;
-            padding: 40px 15px;
-        }
-
-        .waiting-animation {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            animation: bounce 1.5s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .waiting-title {
-            font-size: 1.6rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1f2937;
-        }
-
-        .waiting-subtitle {
-            font-size: 1rem;
-            color: #6b7280;
-            margin-bottom: 20px;
-        }
-
-        /* Compact Question Display */
-        .question-section {
-            display: none;
-        }
-
-        .question-section.active {
-            display: block;
-        }
-
-        .question-header {
-            margin-bottom: 20px;
+          flex-direction: column;
+          gap: 8px;
+          text-align: center;
         }
 
         .question-text {
-            font-size: 1.4rem;
-            line-height: 1.4;
-            color: #1f2937;
-            background: #f8fafc;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid #6366f1;
-            margin-bottom: 20px;
+          font-size: 1.2rem;
+          padding: 16px;
         }
 
-        .answers-container {
-            display: grid;
-            gap: 12px;
-            margin-bottom: 20px;
+        .player-name {
+          font-size: 1.2rem;
         }
 
-        .answer-option {
-            background: #f8fafc;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .score-value {
+          font-size: 1.6rem;
         }
 
-        .answer-option:hover {
-            background: #e0e7ff;
-            border-color: #6366f1;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.2);
-        }
-
-        .answer-option.selected {
-            background: #e0e7ff;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-        }
-
-        .answer-option.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        .answer-option.correct {
-            background: #dcfce7;
-            border-color: #16a34a;
-        }
-
-        .answer-option.incorrect {
-            background: #fecaca;
-            border-color: #dc2626;
-        }
-
-        .answer-label {
-            background: #6366f1;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-
-        .answer-text {
-            font-size: 1rem;
-            color: #374151;
-            flex-grow: 1;
-        }
-
-        .submit-button {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            color: white;
-            border: none;
-            padding: 14px 32px;
-            border-radius: 25px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .submit-button:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-        }
-
-        .submit-button:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Compact Feedback Section */
-        .feedback-section {
-            display: none;
-            text-align: center;
-            padding: 30px 15px;
-        }
-
-        .feedback-section.active {
-            display: block;
-        }
-
-        .feedback-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .feedback-title {
-            font-size: 1.6rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .feedback-title.correct {
-            color: #16a34a;
-        }
-
-        .feedback-title.incorrect {
-            color: #dc2626;
-        }
-
-        .feedback-details {
-            font-size: 1rem;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-
-        .score-earned {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #6366f1;
-            margin-bottom: 15px;
-        }
-
-        .correct-answer {
-            background: #dcfce7;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-
-        .waiting-next {
-            color: #6b7280;
-            font-style: italic;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        /* Compact Leaderboard */
-        .mini-leaderboard {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 15px;
-        }
-
-        .mini-leaderboard h4 {
-            text-align: center;
-            margin-bottom: 12px;
-            color: #1f2937;
-            font-size: 1.1rem;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 0.95rem;
-        }
-
-        .leaderboard-item:last-child {
-            border-bottom: none;
-        }
-
-        .leaderboard-item.current-player {
-            background: #e0e7ff;
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 2px solid #6366f1;
-        }
-
-        .player-rank {
-            font-weight: bold;
-            color: #6366f1;
-            margin-right: 8px;
-        }
-
-        .leaderboard-name {
-            flex-grow: 1;
-            font-weight: 500;
-        }
-
-        .leaderboard-score {
-            font-weight: bold;
-            color: #059669;
-        }
-
-        /* Compact Final Results */
-        .final-results {
-            display: none;
-            text-align: center;
-            padding: 30px 15px;
-        }
-
-        .final-results.active {
-            display: block;
-        }
-
+        .waiting-animation,
+        .feedback-icon,
         .final-trophy {
-            font-size: 3rem;
-            margin-bottom: 15px;
+          font-size: 2.5rem;
+        }
+
+        .waiting-title,
+        .feedback-title {
+          font-size: 1.4rem;
         }
 
         .final-title {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #1f2937;
+          font-size: 1.6rem;
         }
 
         .final-score {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #6366f1;
-            margin-bottom: 8px;
+          font-size: 2rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .game-card {
+          padding: 16px;
         }
 
-        .final-rank {
-            font-size: 1.1rem;
-            color: #6b7280;
-            margin-bottom: 20px;
+        .question-text {
+          font-size: 1.1rem;
+          padding: 14px;
         }
 
-        .play-again-btn {
-            background: white;
-            color: #6366f1;
-            border: 2px solid #6366f1;
-            padding: 14px 32px;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 15px;
+        .answer-option {
+          padding: 14px;
         }
 
-        .play-again-btn:hover {
-            background: #6366f1;
-            color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+        .answer-label {
+          width: 32px;
+          height: 32px;
+          font-size: 0.9rem;
         }
 
-        /* Debug Panel */
-        .debug-panel {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            z-index: 1000;
-            max-width: 300px;
-            display: none;
+        .answer-text {
+          font-size: 0.95rem;
         }
+      }
 
-        .debug-panel.active {
-            display: block;
-        }
+      /* NEW: Sync status indicator */
+      .sync-status {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: #16a34a;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        z-index: 1000;
+        display: none;
+      }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            body {
-                padding: 5px;
-            }
+      .sync-status.warning {
+        background: #f59e0b;
+      }
 
-            .main-container {
-                padding: 0;
-            }
+      .sync-status.error {
+        background: #dc2626;
+      }
 
-            .game-card {
-                padding: 18px;
-                border-radius: 12px;
-            }
-
-            .player-header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-                padding: 10px 0;
-            }
-
-            .progress-info {
-                flex-direction: column;
-                gap: 8px;
-                text-align: center;
-            }
-
-            .question-text {
-                font-size: 1.2rem;
-                padding: 16px;
-            }
-
-            .player-name {
-                font-size: 1.2rem;
-            }
-
-            .score-value {
-                font-size: 1.6rem;
-            }
-
-            .waiting-animation,
-            .feedback-icon,
-            .final-trophy {
-                font-size: 2.5rem;
-            }
-
-            .waiting-title,
-            .feedback-title {
-                font-size: 1.4rem;
-            }
-
-            .final-title {
-                font-size: 1.6rem;
-            }
-
-            .final-score {
-                font-size: 2rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .game-card {
-                padding: 16px;
-            }
-
-            .question-text {
-                font-size: 1.1rem;
-                padding: 14px;
-            }
-
-            .answer-option {
-                padding: 14px;
-            }
-
-            .answer-label {
-                width: 32px;
-                height: 32px;
-                font-size: 0.9rem;
-            }
-
-            .answer-text {
-                font-size: 0.95rem;
-            }
-        }
-
-        /* NEW: Sync status indicator */
-        .sync-status {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            background: #16a34a;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            z-index: 1000;
-            display: none;
-        }
-
-        .sync-status.warning {
-            background: #f59e0b;
-        }
-
-        .sync-status.error {
-            background: #dc2626;
-        }
-
-        .sync-status.active {
-            display: block;
-        }
+      .sync-status.active {
+        display: block;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Debug Panel -->
     <div class="debug-panel" id="debug-panel">
-        <div><strong>Debug Info:</strong></div>
-        <div>Session ID: <span id="debug-session-id">Loading...</span></div>
-        <div>Player ID: <span id="debug-player-id">Loading...</span></div>
-        <div>Game Status: <span id="debug-status">Loading...</span></div>
-        <div>Polling: <span id="debug-polling">Stopped</span></div>
-        <div>Time Left: <span id="debug-time-left">-</span></div>
-        <button onclick="toggleDebugPanel()" style="margin-top: 8px; padding: 4px 8px; border: none; background: #6366f1; color: white; border-radius: 4px; cursor: pointer;">Hide</button>
+      <div><strong>Debug Info:</strong></div>
+      <div>Session ID: <span id="debug-session-id">Loading...</span></div>
+      <div>Player ID: <span id="debug-player-id">Loading...</span></div>
+      <div>Game Status: <span id="debug-status">Loading...</span></div>
+      <div>Polling: <span id="debug-polling">Stopped</span></div>
+      <div>Time Left: <span id="debug-time-left">-</span></div>
+      <button
+        onclick="toggleDebugPanel()"
+        style="
+          margin-top: 8px;
+          padding: 4px 8px;
+          border: none;
+          background: #6366f1;
+          color: white;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+      >
+        Hide
+      </button>
     </div>
 
     <!-- NEW: Sync status indicator -->
-    <div class="sync-status" id="sync-status">
-        🔄 Syncing...
-    </div>
+    <div class="sync-status" id="sync-status">🔄 Syncing...</div>
 
     <div class="main-container">
-        <div class="game-card">
-            <!-- Player Header -->
-            <div class="player-header">
-                <div class="player-info">
-                    <div class="player-avatar" id="player-avatar">P</div>
-                    <div class="player-name" id="player-name">Player Name</div>
-                </div>
-                <div class="score-display">
-                    <div class="score-label">Your Score</div>
-                    <div class="score-value" id="player-score">0</div>
-                </div>
-            </div>
-
-            <!-- Progress Section -->
-            <div class="progress-section">
-                <div class="progress-info">
-                    <div class="question-progress" id="question-progress">Question 0 of 5</div>
-                    <div class="timer-display" id="timer-display">20</div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Waiting State -->
-            <div class="waiting-state" id="waiting-state">
-                <div class="waiting-animation">⏳</div>
-                <div class="waiting-title">Ready to Play!</div>
-                <div class="waiting-subtitle">Waiting for the host to start the game...</div>
-                <div class="mini-leaderboard">
-                    <h4>Players in Game</h4>
-                    <div id="waiting-players">
-                        <!-- Players will be listed here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Question Section -->
-            <div class="question-section" id="question-section">
-                <div class="question-header">
-                    <div class="question-text" id="question-text">
-                        Question will appear here...
-                    </div>
-                </div>
-
-                <div class="answers-container" id="answers-container">
-                    <!-- Answer options will be populated here -->
-                </div>
-
-                <button class="submit-button" id="submit-button" onclick="submitAnswer()" disabled>
-                    Select an answer to continue
-                </button>
-            </div>
-
-            <!-- Answer Feedback -->
-            <div class="feedback-section" id="feedback-section">
-                <div class="feedback-icon" id="feedback-icon">✅</div>
-                <div class="feedback-title" id="feedback-title">Correct!</div>
-                <div class="feedback-details" id="feedback-details">Great job!</div>
-                <div class="score-earned" id="score-earned">+150 points</div>
-                <div class="correct-answer" id="correct-answer-display" style="display: none;">
-                    <strong>Correct Answer:</strong> <span id="correct-answer-text">Answer here</span>
-                </div>
-                <div class="waiting-next">Waiting for next question...</div>
-
-                <div class="mini-leaderboard">
-                    <h4>Current Standings</h4>
-                    <div id="feedback-leaderboard">
-                        <!-- Current leaderboard will be shown here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Final Results -->
-            <div class="final-results" id="final-results">
-                <div class="final-trophy">🏆</div>
-                <div class="final-title">Quiz Completed!</div>
-                <div class="final-score" id="final-score-display">0</div>
-                <div class="final-rank" id="final-rank-display">Final Rank: #1</div>
-
-                <div class="mini-leaderboard">
-                    <h4>Final Leaderboard</h4>
-                    <div id="final-leaderboard-display">
-                        <!-- Final leaderboard will be shown here -->
-                    </div>
-                </div>
-
-                <button class="play-again-btn" onclick="playAgain()">
-                    Play Another Quiz
-                </button>
-            </div>
+      <div class="game-card">
+        <!-- Player Header -->
+        <div class="player-header">
+          <div class="player-info">
+            <div class="player-avatar" id="player-avatar">P</div>
+            <div class="player-name" id="player-name">Player Name</div>
+          </div>
+          <div class="score-display">
+            <div class="score-label">Your Score</div>
+            <div class="score-value" id="player-score">0</div>
+          </div>
         </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section">
+          <div class="progress-info">
+            <div class="question-progress" id="question-progress">
+              Question 0 of 5
+            </div>
+            <div class="timer-display" id="timer-display">20</div>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-fill"
+              id="progress-fill"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Waiting State -->
+        <div class="waiting-state" id="waiting-state">
+          <div class="waiting-animation">⏳</div>
+          <div class="waiting-title">Ready to Play!</div>
+          <div class="waiting-subtitle">
+            Waiting for the host to start the game...
+          </div>
+          <div class="mini-leaderboard">
+            <h4>Players in Game</h4>
+            <div id="waiting-players">
+              <!-- Players will be listed here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Section -->
+        <div class="question-section" id="question-section">
+          <div class="question-header">
+            <div class="question-text" id="question-text">
+              Question will appear here...
+            </div>
+          </div>
+
+          <div class="answers-container" id="answers-container">
+            <!-- Answer options will be populated here -->
+          </div>
+
+          <button
+            class="submit-button"
+            id="submit-button"
+            onclick="submitAnswer()"
+            disabled
+          >
+            Select an answer to continue
+          </button>
+        </div>
+
+        <!-- Answer Feedback -->
+        <div class="feedback-section" id="feedback-section">
+          <div class="feedback-icon" id="feedback-icon">✅</div>
+          <div class="feedback-title" id="feedback-title">Correct!</div>
+          <div class="feedback-details" id="feedback-details">Great job!</div>
+          <div class="score-earned" id="score-earned">+150 points</div>
+          <div
+            class="correct-answer"
+            id="correct-answer-display"
+            style="display: none"
+          >
+            <strong>Correct Answer:</strong>
+            <span id="correct-answer-text">Answer here</span>
+          </div>
+          <div class="waiting-next">Waiting for next question...</div>
+
+          <div class="mini-leaderboard">
+            <h4>Current Standings</h4>
+            <div id="feedback-leaderboard">
+              <!-- Current leaderboard will be shown here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Final Results -->
+        <div class="final-results" id="final-results">
+          <div class="final-trophy">🏆</div>
+          <div class="final-title">Quiz Completed!</div>
+          <div class="final-score" id="final-score-display">0</div>
+          <div class="final-rank" id="final-rank-display">Final Rank: #1</div>
+
+          <div class="mini-leaderboard">
+            <h4>Final Leaderboard</h4>
+            <div id="final-leaderboard-display">
+              <!-- Final leaderboard will be shown here -->
+            </div>
+          </div>
+
+          <button class="play-again-btn" onclick="playAgain()">
+            Play Another Quiz
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- UPDATED SCRIPT WITH REAL-TIME SYNCHRONIZATION -->
     <script>
-        // AUTO SESSION ID DETECTION AND REDIRECT (Keep this part unchanged)
-        (function() {
-            console.log('🔧 Auto-detecting session ID...');
+      // AUTO SESSION ID DETECTION AND REDIRECT (Keep this part unchanged)
+      (function () {
+        console.log("🔧 Auto-detecting session ID...");
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlSessionId = urlParams.get('session');
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlSessionId = urlParams.get("session");
 
-            if (urlSessionId) {
-                console.log(`✅ Session ID already in URL: ${urlSessionId}`);
-                return;
+        if (urlSessionId) {
+          console.log(`✅ Session ID already in URL: ${urlSessionId}`);
+          return;
+        }
+
+        console.log("🔍 No session ID in URL, checking localStorage...");
+
+        try {
+          const playerDataString = localStorage.getItem("playerData");
+
+          if (!playerDataString) {
+            console.log("❌ No playerData found in localStorage");
+            alert("No game session found. Please join a quiz first.");
+            window.location.href = "/join-game/";
+            return;
+          }
+
+          const playerData = JSON.parse(playerDataString);
+          const sessionId = playerData.session?.id;
+
+          if (sessionId) {
+            console.log(`✅ Found session ID in localStorage: ${sessionId}`);
+            console.log("🔄 Automatically redirecting with session ID...");
+
+            const newUrl = `/play-game/?session=${sessionId}`;
+            window.location.replace(newUrl);
+            return;
+          } else {
+            console.log("❌ No session ID found in playerData");
+            console.log("PlayerData contents:", playerData);
+            alert("Invalid game session data. Please join a quiz again.");
+            window.location.href = "/join-game/";
+            return;
+          }
+        } catch (error) {
+          console.error("❌ Error reading localStorage:", error);
+          alert("Error loading game session. Please try joining again.");
+          window.location.href = "/join-game/";
+          return;
+        }
+      })();
+
+      // REAL-TIME SYNCHRONIZED GAME MANAGER
+      class SynchronizedGameManager {
+        constructor() {
+          this.API_BASE = "/api";
+          this.csrfToken = "";
+
+          // Game state
+          this.playerId = null;
+          this.sessionId = null;
+          this.playerData = null;
+          this.currentQuestion = null;
+          this.selectedAnswer = null;
+          this.hasAnswered = false;
+          this.gameTimer = null;
+          this.timeLeft = 20;
+          this.totalQuestions = 5;
+          this.currentQuestionIndex = 0;
+          this.serverTimeOffset = 0;
+          this.questionStartTime = null;
+
+          // Debug mode
+          this.debugMode = true;
+
+          this.init();
+        }
+
+        async init() {
+          this.log("🚀 Initializing Synchronized Game Manager...");
+
+          try {
+            this.sessionId = this.getSessionId();
+
+            if (!this.sessionId) {
+              this.showError(
+                "No session ID found! Add ?session=YOUR_SESSION_ID to URL"
+              );
+              return;
             }
 
-            console.log('🔍 No session ID in URL, checking localStorage...');
+            this.log(`✅ Session ID found: ${this.sessionId}`);
+            this.updateDebugPanel();
 
+            await this.fetchCSRFToken();
+            await this.syncServerTime();
+
+            const storedPlayerData = localStorage.getItem("playerData");
+            if (storedPlayerData) {
+              const gameData = JSON.parse(storedPlayerData);
+              this.playerData = gameData.player;
+              this.playerId = this.playerData.id;
+              this.log(
+                `📱 Player data from localStorage: ${this.playerData.nickname}`
+              );
+            }
+
+            this.updatePlayerInfo();
+            this.startFastPolling(); // FAST POLLING FOR REAL-TIME SYNC
+          } catch (error) {
+            this.log(`❌ Initialization error: ${error.message}`);
+            this.showError("Error loading game. Please try again.");
+          }
+        }
+
+        getSessionId() {
+          const sources = [
+            () => new URLSearchParams(window.location.search).get("session"),
+            () => new URLSearchParams(window.location.search).get("sessionId"),
+            () => new URLSearchParams(window.location.search).get("id"),
+            () => window.SESSION_ID,
+            () => window.sessionId,
+            () => document.body.dataset.sessionId,
+            () => {
+              const el = document.querySelector("[data-session-id]");
+              return el ? el.dataset.sessionId : null;
+            },
+          ];
+
+          for (const source of sources) {
             try {
-                const playerDataString = localStorage.getItem('playerData');
+              const id = source();
+              if (id && id !== "null" && id !== "undefined") {
+                this.log(`✅ Session ID found: ${id}`);
+                return id;
+              }
+            } catch (e) {
+              // Continue to next source
+            }
+          }
 
-                if (!playerDataString) {
-                    console.log('❌ No playerData found in localStorage');
-                    alert('No game session found. Please join a quiz first.');
-                    window.location.href = '/join-game/';
-                    return;
+          return null;
+        }
+
+        async fetchCSRFToken() {
+          try {
+            const response = await fetch(`${this.API_BASE}/auth/csrf/`, {
+              credentials: "include",
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              this.csrfToken = data.csrfToken;
+              this.log("✅ CSRF token fetched");
+            }
+          } catch (error) {
+            this.csrfToken = this.getCookie("csrftoken");
+            this.log("⚠️ Using CSRF from cookie");
+          }
+        }
+
+        // NEW: Server time synchronization
+        async syncServerTime() {
+          try {
+            const requestTime = Date.now();
+            const response = await fetch(
+              `${this.API_BASE}/sessions/${this.sessionId}/game_state/`,
+              {
+                credentials: "include",
+              }
+            );
+            const responseTime = Date.now();
+
+            if (response.ok) {
+              const data = await response.json();
+              if (data.server_time) {
+                const serverTime = new Date(data.server_time).getTime();
+                const networkDelay = (responseTime - requestTime) / 2;
+                this.serverTimeOffset =
+                  serverTime - (responseTime - networkDelay);
+                this.log(
+                  `⏱️ Server time synced, offset: ${this.serverTimeOffset}ms`
+                );
+              }
+            }
+          } catch (error) {
+            this.log("⚠️ Failed to sync server time:", error.message);
+          }
+        }
+
+        getServerTime() {
+          return Date.now() + this.serverTimeOffset;
+        }
+
+        getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === name + "=") {
+                cookieValue = decodeURIComponent(
+                  cookie.substring(name.length + 1)
+                );
+                break;
+              }
+            }
+          }
+          return cookieValue;
+        }
+
+        updatePlayerInfo() {
+          if (this.playerData) {
+            document.getElementById("player-name").textContent =
+              this.playerData.nickname;
+            document.getElementById("player-avatar").textContent =
+              this.playerData.nickname.charAt(0).toUpperCase();
+            document.getElementById("player-score").textContent =
+              this.playerData.score || 0;
+            this.playerId = this.playerData.id;
+          }
+          this.updateDebugPanel();
+        }
+
+        // NEW: Fast polling for real-time synchronization
+        startFastPolling() {
+          this.log(`🚀 Starting fast polling for session ${this.sessionId}`);
+          this.setSyncStatus("🔄 Syncing...", "active");
+
+          if (this.gameTimer) {
+            clearInterval(this.gameTimer);
+          }
+
+          // Poll every 500ms for real-time updates
+          this.gameTimer = setInterval(() => {
+            this.checkGameState();
+          }, 500);
+
+          this.checkGameState();
+          this.updateDebugPanel();
+        }
+
+        // NEW: Use game_state endpoint for real-time data
+        async checkGameState() {
+          try {
+            const response = await fetch(
+              `${this.API_BASE}/sessions/${this.sessionId}/game_state/`,
+              {
+                method: "GET",
+                credentials: "include",
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+
+            const gameState = await response.json();
+            this.handleGameStateUpdate(gameState);
+            this.setSyncStatus("✅ Connected", "active");
+            this.updateDebugPanel();
+          } catch (error) {
+            this.log(`❌ Error checking game state: ${error.message}`);
+            this.setSyncStatus("⚠️ Connection issue", "warning");
+
+            // Fallback to regular session endpoint
+            try {
+              const fallbackResponse = await fetch(
+                `${this.API_BASE}/sessions/${this.sessionId}/`,
+                {
+                  credentials: "include",
                 }
-
-                const playerData = JSON.parse(playerDataString);
-                const sessionId = playerData.session?.id;
-
-                if (sessionId) {
-                    console.log(`✅ Found session ID in localStorage: ${sessionId}`);
-                    console.log('🔄 Automatically redirecting with session ID...');
-
-                    const newUrl = `/play-game/?session=${sessionId}`;
-                    window.location.replace(newUrl);
-                    return;
-
-                } else {
-                    console.log('❌ No session ID found in playerData');
-                    console.log('PlayerData contents:', playerData);
-                    alert('Invalid game session data. Please join a quiz again.');
-                    window.location.href = '/join-game/';
-                    return;
-                }
-
-            } catch (error) {
-                console.error('❌ Error reading localStorage:', error);
-                alert('Error loading game session. Please try joining again.');
-                window.location.href = '/join-game/';
-                return;
+              );
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                this.handleGameStateUpdate(fallbackData);
+              }
+            } catch (fallbackError) {
+              this.setSyncStatus("❌ Offline", "error");
             }
-        })();
+          }
+        }
 
-        // REAL-TIME SYNCHRONIZED GAME MANAGER
-        class SynchronizedGameManager {
-            constructor() {
-                this.API_BASE = '/api';
-                this.csrfToken = '';
+        handleGameStateUpdate(gameState) {
+          const status = gameState.status;
+          this.log(
+            `🎮 Game state: ${status}, Q${
+              (gameState.current_question_index || 0) + 1
+            }, ${gameState.time_left || 0}s left`
+          );
 
-                // Game state
-                this.playerId = null;
-                this.sessionId = null;
-                this.playerData = null;
-                this.currentQuestion = null;
-                this.selectedAnswer = null;
-                this.hasAnswered = false;
-                this.gameTimer = null;
-                this.timeLeft = 20;
-                this.totalQuestions = 5;
-                this.currentQuestionIndex = 0;
-                this.serverTimeOffset = 0;
-                this.questionStartTime = null;
+          if (status === "waiting") {
+            this.showWaitingState(gameState);
+          } else if (status === "active") {
+            this.handleActiveGame(gameState);
+          } else if (status === "finished") {
+            this.showFinalResults();
+          }
+        }
 
-                // Debug mode
-                this.debugMode = true;
+        showWaitingState(gameState) {
+          this.showSection("waiting-state");
 
-                this.init();
-            }
-
-            async init() {
-                this.log('🚀 Initializing Synchronized Game Manager...');
-
-                try {
-                    this.sessionId = this.getSessionId();
-
-                    if (!this.sessionId) {
-                        this.showError('No session ID found! Add ?session=YOUR_SESSION_ID to URL');
-                        return;
-                    }
-
-                    this.log(`✅ Session ID found: ${this.sessionId}`);
-                    this.updateDebugPanel();
-
-                    await this.fetchCSRFToken();
-                    await this.syncServerTime();
-
-                    const storedPlayerData = localStorage.getItem('playerData');
-                    if (storedPlayerData) {
-                        const gameData = JSON.parse(storedPlayerData);
-                        this.playerData = gameData.player;
-                        this.playerId = this.playerData.id;
-                        this.log(`📱 Player data from localStorage: ${this.playerData.nickname}`);
-                    }
-
-                    this.updatePlayerInfo();
-                    this.startFastPolling(); // FAST POLLING FOR REAL-TIME SYNC
-
-                } catch (error) {
-                    this.log(`❌ Initialization error: ${error.message}`);
-                    this.showError('Error loading game. Please try again.');
-                }
-            }
-
-            getSessionId() {
-                const sources = [
-                    () => new URLSearchParams(window.location.search).get('session'),
-                    () => new URLSearchParams(window.location.search).get('sessionId'),
-                    () => new URLSearchParams(window.location.search).get('id'),
-                    () => window.SESSION_ID,
-                    () => window.sessionId,
-                    () => document.body.dataset.sessionId,
-                    () => {
-                        const el = document.querySelector('[data-session-id]');
-                        return el ? el.dataset.sessionId : null;
-                    }
-                ];
-
-                for (const source of sources) {
-                    try {
-                        const id = source();
-                        if (id && id !== 'null' && id !== 'undefined') {
-                            this.log(`✅ Session ID found: ${id}`);
-                            return id;
-                        }
-                    } catch (e) {
-                        // Continue to next source
-                    }
-                }
-
-                return null;
-            }
-
-            async fetchCSRFToken() {
-                try {
-                    const response = await fetch(`${this.API_BASE}/auth/csrf/`, {
-                        credentials: 'include'
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.csrfToken = data.csrfToken;
-                        this.log('✅ CSRF token fetched');
-                    }
-                } catch (error) {
-                    this.csrfToken = this.getCookie('csrftoken');
-                    this.log('⚠️ Using CSRF from cookie');
-                }
-            }
-
-            // NEW: Server time synchronization
-            async syncServerTime() {
-                try {
-                    const requestTime = Date.now();
-                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/game_state/`, {
-                        credentials: 'include'
-                    });
-                    const responseTime = Date.now();
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.server_time) {
-                            const serverTime = new Date(data.server_time).getTime();
-                            const networkDelay = (responseTime - requestTime) / 2;
-                            this.serverTimeOffset = serverTime - (responseTime - networkDelay);
-                            this.log(`⏱️ Server time synced, offset: ${this.serverTimeOffset}ms`);
-                        }
-                    }
-                } catch (error) {
-                    this.log('⚠️ Failed to sync server time:', error.message);
-                }
-            }
-
-            getServerTime() {
-                return Date.now() + this.serverTimeOffset;
-            }
-
-            getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-
-            updatePlayerInfo() {
-                if (this.playerData) {
-                    document.getElementById('player-name').textContent = this.playerData.nickname;
-                    document.getElementById('player-avatar').textContent = this.playerData.nickname.charAt(0).toUpperCase();
-                    document.getElementById('player-score').textContent = this.playerData.score || 0;
-                    this.playerId = this.playerData.id;
-                }
-                this.updateDebugPanel();
-            }
-
-            // NEW: Fast polling for real-time synchronization
-            startFastPolling() {
-                this.log(`🚀 Starting fast polling for session ${this.sessionId}`);
-                this.setSyncStatus('🔄 Syncing...', 'active');
-
-                if (this.gameTimer) {
-                    clearInterval(this.gameTimer);
-                }
-
-                // Poll every 500ms for real-time updates
-                this.gameTimer = setInterval(() => {
-                    this.checkGameState();
-                }, 500);
-
-                this.checkGameState();
-                this.updateDebugPanel();
-            }
-
-            // NEW: Use game_state endpoint for real-time data
-            async checkGameState() {
-                try {
-                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/game_state/`, {
-                        method: 'GET',
-                        credentials: 'include'
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-
-                    const gameState = await response.json();
-                    this.handleGameStateUpdate(gameState);
-                    this.setSyncStatus('✅ Connected', 'active');
-                    this.updateDebugPanel();
-
-                } catch (error) {
-                    this.log(`❌ Error checking game state: ${error.message}`);
-                    this.setSyncStatus('⚠️ Connection issue', 'warning');
-
-                    // Fallback to regular session endpoint
-                    try {
-                        const fallbackResponse = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/`, {
-                            credentials: 'include'
-                        });
-                        if (fallbackResponse.ok) {
-                            const fallbackData = await fallbackResponse.json();
-                            this.handleGameStateUpdate(fallbackData);
-                        }
-                    } catch (fallbackError) {
-                        this.setSyncStatus('❌ Offline', 'error');
-                    }
-                }
-            }
-
-            handleGameStateUpdate(gameState) {
-                const status = gameState.status;
-                this.log(`🎮 Game state: ${status}, Q${(gameState.current_question_index || 0) + 1}, ${gameState.time_left || 0}s left`);
-
-                if (status === 'waiting') {
-                    this.showWaitingState(gameState);
-                } else if (status === 'active') {
-                    this.handleActiveGame(gameState);
-                } else if (status === 'finished') {
-                    this.showFinalResults();
-                }
-            }
-
-            showWaitingState(gameState) {
-                this.showSection('waiting-state');
-
-                const waitingPlayers = document.getElementById('waiting-players');
-                if (gameState.players && gameState.players.length > 0) {
-                    waitingPlayers.innerHTML = gameState.players.map(player => `
-                        <div class="leaderboard-item ${player.id === this.playerId ? 'current-player' : ''}">
-                            <span class="leaderboard-name">${player.nickname}</span>
+          const waitingPlayers = document.getElementById("waiting-players");
+          if (gameState.players && gameState.players.length > 0) {
+            waitingPlayers.innerHTML = gameState.players
+              .map(
+                (player) => `
+                        <div class="leaderboard-item ${
+                          player.id === this.playerId ? "current-player" : ""
+                        }">
+                            <span class="leaderboard-name">${
+                              player.nickname
+                            }</span>
                             <span class="leaderboard-score">Ready</span>
                         </div>
-                    `).join('');
-                } else {
-                    waitingPlayers.innerHTML = '<div style="text-align: center; color: #6b7280;">No players yet</div>';
-                }
+                    `
+              )
+              .join("");
+          } else {
+            waitingPlayers.innerHTML =
+              '<div style="text-align: center; color: #6b7280;">No players yet</div>';
+          }
+        }
+
+        handleActiveGame(gameState) {
+          // Check if this is a new question
+          const questionChanged =
+            this.currentQuestion?.id !== gameState.current_question?.id;
+
+          if (questionChanged && gameState.current_question) {
+            this.log(
+              `📝 New question detected: ${gameState.current_question.question_text.substring(
+                0,
+                50
+              )}`
+            );
+            this.currentQuestion = gameState.current_question;
+            this.currentQuestionIndex = gameState.current_question_index || 0;
+            this.totalQuestions = gameState.total_questions || 5;
+
+            // Store question start time from server
+            if (gameState.question_start_time) {
+              this.questionStartTime = new Date(gameState.question_start_time);
             }
 
-            handleActiveGame(gameState) {
-                // Check if this is a new question
-                const questionChanged = this.currentQuestion?.id !== gameState.current_question?.id;
+            this.displayQuestion(gameState.current_question);
+            this.showSection("question-section");
+            this.updateProgress();
+          }
 
-                if (questionChanged && gameState.current_question) {
-                    this.log(`📝 New question detected: ${gameState.current_question.question_text.substring(0, 50)}`);
-                    this.currentQuestion = gameState.current_question;
-                    this.currentQuestionIndex = gameState.current_question_index || 0;
-                    this.totalQuestions = gameState.total_questions || 5;
+          // Update timer with server time
+          if (gameState.time_left !== undefined) {
+            this.updateTimerFromServer(gameState.time_left);
+          }
+        }
 
-                    // Store question start time from server
-                    if (gameState.question_start_time) {
-                        this.questionStartTime = new Date(gameState.question_start_time);
-                    }
+        displayQuestion(question) {
+          this.log(`❓ Displaying question: ${question.question_text}`);
 
-                    this.displayQuestion(gameState.current_question);
-                    this.showSection('question-section');
-                    this.updateProgress();
-                }
+          document.getElementById("question-text").textContent =
+            question.question_text;
 
-                // Update timer with server time
-                if (gameState.time_left !== undefined) {
-                    this.updateTimerFromServer(gameState.time_left);
-                }
-            }
+          // Reset answer state
+          this.selectedAnswer = null;
+          this.hasAnswered = false;
 
-            displayQuestion(question) {
-                this.log(`❓ Displaying question: ${question.question_text}`);
+          // Shuffle answers
+          const allAnswers = [
+            question.correct_answer,
+            ...question.wrong_answers,
+          ];
+          const shuffledAnswers = this.shuffleArray([...allAnswers]);
 
-                document.getElementById('question-text').textContent = question.question_text;
+          // Create answer options
+          const answersContainer = document.getElementById("answers-container");
+          const answerLabels = ["A", "B", "C", "D"];
 
-                // Reset answer state
-                this.selectedAnswer = null;
-                this.hasAnswered = false;
-
-                // Shuffle answers
-                const allAnswers = [question.correct_answer, ...question.wrong_answers];
-                const shuffledAnswers = this.shuffleArray([...allAnswers]);
-
-                // Create answer options
-                const answersContainer = document.getElementById('answers-container');
-                const answerLabels = ['A', 'B', 'C', 'D'];
-
-                answersContainer.innerHTML = shuffledAnswers.map((answer, index) => `
-                    <div class="answer-option" onclick="window.gameManager.selectAnswer('${answer.replace(/'/g, "\\'")}', this)">
+          answersContainer.innerHTML = shuffledAnswers
+            .map(
+              (answer, index) => `
+                    <div class="answer-option" onclick="window.gameManager.selectAnswer('${answer.replace(
+                      /'/g,
+                      "\\'"
+                    )}', this)">
                         <div class="answer-label">${answerLabels[index]}</div>
                         <div class="answer-text">${answer}</div>
                     </div>
-                `).join('');
+                `
+            )
+            .join("");
 
-                // Reset submit button
-                const submitBtn = document.getElementById('submit-button');
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Select an answer to continue';
+          // Reset submit button
+          const submitBtn = document.getElementById("submit-button");
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Select an answer to continue";
+        }
+
+        // NEW: Server-synchronized timer
+        updateTimerFromServer(timeLeft) {
+          this.timeLeft = Math.max(0, Math.ceil(timeLeft));
+          this.updateTimerDisplay();
+
+          if (this.timeLeft <= 0 && !this.hasAnswered) {
+            this.disableAnswerButtons();
+          }
+        }
+
+        disableAnswerButtons() {
+          document.querySelectorAll(".answer-option").forEach((option) => {
+            option.classList.add("disabled");
+          });
+          document.getElementById("submit-button").disabled = true;
+        }
+
+        updateTimerDisplay() {
+          const timerDisplay = document.getElementById("timer-display");
+          timerDisplay.textContent = this.timeLeft;
+
+          if (this.timeLeft <= 5) {
+            timerDisplay.classList.add("warning");
+          } else {
+            timerDisplay.classList.remove("warning");
+          }
+        }
+
+        updateProgress() {
+          const current = this.currentQuestionIndex + 1;
+          const total = this.totalQuestions;
+
+          document.getElementById(
+            "question-progress"
+          ).textContent = `Question ${current} of ${total}`;
+          const percentage = total > 0 ? (current / total) * 100 : 0;
+          document.getElementById(
+            "progress-fill"
+          ).style.width = `${percentage}%`;
+        }
+
+        selectAnswer(answer, element) {
+          if (this.hasAnswered || this.timeLeft <= 0) return;
+
+          this.log(`👆 Answer selected: ${answer}`);
+
+          // Remove previous selection
+          document.querySelectorAll(".answer-option").forEach((option) => {
+            option.classList.remove("selected");
+          });
+
+          // Mark current selection
+          element.classList.add("selected");
+          this.selectedAnswer = answer;
+
+          // Enable submit button
+          const submitBtn = document.getElementById("submit-button");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit Answer";
+        }
+
+        async submitAnswer() {
+          if (!this.selectedAnswer || this.hasAnswered || !this.playerId) {
+            this.log(
+              "⚠️ Cannot submit answer - missing data or already answered"
+            );
+            return;
+          }
+
+          this.hasAnswered = true;
+
+          // Calculate time taken based on server time
+          let timeTaken = 20;
+          if (this.questionStartTime) {
+            const now = this.getServerTime();
+            const startTime = this.questionStartTime.getTime();
+            timeTaken = Math.max(0, (now - startTime) / 1000);
+          }
+
+          this.log(
+            `📤 Submitting answer: ${
+              this.selectedAnswer
+            } (time: ${timeTaken.toFixed(1)}s)`
+          );
+
+          // Disable UI immediately
+          this.disableAnswerButtons();
+
+          try {
+            if (!this.csrfToken) {
+              await this.fetchCSRFToken();
             }
 
-            // NEW: Server-synchronized timer
-            updateTimerFromServer(timeLeft) {
-                this.timeLeft = Math.max(0, Math.ceil(timeLeft));
-                this.updateTimerDisplay();
+            const response = await fetch(
+              `${this.API_BASE}/players/${this.playerId}/submit_answer/`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": this.csrfToken,
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                  question_id: this.currentQuestion.id,
+                  selected_answer: this.selectedAnswer,
+                  time_taken: timeTaken,
+                }),
+              }
+            );
 
-                if (this.timeLeft <= 0 && !this.hasAnswered) {
-                    this.disableAnswerButtons();
-                }
+            if (!response.ok) {
+              throw new Error(`Submit failed: ${response.status}`);
             }
 
-            disableAnswerButtons() {
-                document.querySelectorAll('.answer-option').forEach(option => {
-                    option.classList.add('disabled');
-                });
-                document.getElementById('submit-button').disabled = true;
+            const result = await response.json();
+            this.log(`✅ Answer submitted:`, result);
+
+            // Update player score
+            if (this.playerData) {
+              this.playerData.score = result.total_score;
+            }
+            document.getElementById("player-score").textContent =
+              result.total_score;
+
+            // Show feedback
+            this.showAnswerFeedback(result);
+          } catch (error) {
+            this.log(`❌ Error submitting answer: ${error.message}`);
+            alert("Error submitting answer: " + error.message);
+            this.hasAnswered = false;
+
+            // Re-enable UI
+            document.querySelectorAll(".answer-option").forEach((option) => {
+              option.classList.remove("disabled");
+            });
+            document.getElementById("submit-button").disabled = false;
+          }
+        }
+
+        showAnswerFeedback(result) {
+          // Highlight correct/incorrect answers
+          document.querySelectorAll(".answer-option").forEach((option) => {
+            const answerText = option.querySelector(".answer-text").textContent;
+            if (answerText === result.correct_answer) {
+              option.classList.add("correct");
+            } else if (
+              answerText === this.selectedAnswer &&
+              !result.is_correct
+            ) {
+              option.classList.add("incorrect");
+            }
+          });
+
+          // Show feedback after delay
+          setTimeout(() => {
+            this.showSection("feedback-section");
+
+            const feedbackIcon = document.getElementById("feedback-icon");
+            const feedbackTitle = document.getElementById("feedback-title");
+            const feedbackDetails = document.getElementById("feedback-details");
+            const scoreEarned = document.getElementById("score-earned");
+            const correctAnswerDisplay = document.getElementById(
+              "correct-answer-display"
+            );
+            const correctAnswerText = document.getElementById(
+              "correct-answer-text"
+            );
+
+            if (result.is_correct) {
+              feedbackIcon.textContent = "✅";
+              feedbackTitle.textContent = "Correct!";
+              feedbackTitle.className = "feedback-title correct";
+              feedbackDetails.textContent = "Great job!";
+              scoreEarned.textContent = `+${result.score_earned} points`;
+              correctAnswerDisplay.style.display = "none";
+            } else {
+              feedbackIcon.textContent = "❌";
+              feedbackTitle.textContent = "Incorrect";
+              feedbackTitle.className = "feedback-title incorrect";
+              feedbackDetails.textContent = "Better luck next time!";
+              scoreEarned.textContent = "+0 points";
+              correctAnswerDisplay.style.display = "block";
+              correctAnswerText.textContent = result.correct_answer;
             }
 
-            updateTimerDisplay() {
-                const timerDisplay = document.getElementById('timer-display');
-                timerDisplay.textContent = this.timeLeft;
+            this.updateLeaderboard("feedback-leaderboard");
 
-                if (this.timeLeft <= 5) {
-                    timerDisplay.classList.add('warning');
-                } else {
-                    timerDisplay.classList.remove('warning');
-                }
-            }
+            // Resume fast polling after feedback
+            setTimeout(() => {
+              // Don't restart polling - let it continue
+            }, 3000);
+          }, 1500);
+        }
 
-            updateProgress() {
-                const current = this.currentQuestionIndex + 1;
-                const total = this.totalQuestions;
+        async updateLeaderboard(elementId) {
+          try {
+            const response = await fetch(
+              `${this.API_BASE}/sessions/${this.sessionId}/leaderboard/`
+            );
+            if (!response.ok) throw new Error("Failed to get leaderboard");
 
-                document.getElementById('question-progress').textContent = `Question ${current} of ${total}`;
-                const percentage = total > 0 ? (current / total) * 100 : 0;
-                document.getElementById('progress-fill').style.width = `${percentage}%`;
-            }
+            const data = await response.json();
+            const players = data.leaderboard || [];
 
-            selectAnswer(answer, element) {
-                if (this.hasAnswered || this.timeLeft <= 0) return;
-
-                this.log(`👆 Answer selected: ${answer}`);
-
-                // Remove previous selection
-                document.querySelectorAll('.answer-option').forEach(option => {
-                    option.classList.remove('selected');
-                });
-
-                // Mark current selection
-                element.classList.add('selected');
-                this.selectedAnswer = answer;
-
-                // Enable submit button
-                const submitBtn = document.getElementById('submit-button');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Answer';
-            }
-
-            async submitAnswer() {
-                if (!this.selectedAnswer || this.hasAnswered || !this.playerId) {
-                    this.log('⚠️ Cannot submit answer - missing data or already answered');
-                    return;
-                }
-
-                this.hasAnswered = true;
-
-                // Calculate time taken based on server time
-                let timeTaken = 20;
-                if (this.questionStartTime) {
-                    const now = this.getServerTime();
-                    const startTime = this.questionStartTime.getTime();
-                    timeTaken = Math.max(0, (now - startTime) / 1000);
-                }
-
-                this.log(`📤 Submitting answer: ${this.selectedAnswer} (time: ${timeTaken.toFixed(1)}s)`);
-
-                // Disable UI immediately
-                this.disableAnswerButtons();
-
-                try {
-                    if (!this.csrfToken) {
-                        await this.fetchCSRFToken();
-                    }
-
-                    const response = await fetch(`${this.API_BASE}/players/${this.playerId}/submit_answer/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': this.csrfToken,
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            question_id: this.currentQuestion.id,
-                            selected_answer: this.selectedAnswer,
-                            time_taken: timeTaken
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Submit failed: ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    this.log(`✅ Answer submitted:`, result);
-
-                    // Update player score
-                    if (this.playerData) {
-                        this.playerData.score = result.total_score;
-                    }
-                    document.getElementById('player-score').textContent = result.total_score;
-
-                    // Show feedback
-                    this.showAnswerFeedback(result);
-
-                } catch (error) {
-                    this.log(`❌ Error submitting answer: ${error.message}`);
-                    alert('Error submitting answer: ' + error.message);
-                    this.hasAnswered = false;
-
-                    // Re-enable UI
-                    document.querySelectorAll('.answer-option').forEach(option => {
-                        option.classList.remove('disabled');
-                    });
-                    document.getElementById('submit-button').disabled = false;
-                }
-            }
-
-            showAnswerFeedback(result) {
-                // Highlight correct/incorrect answers
-                document.querySelectorAll('.answer-option').forEach(option => {
-                    const answerText = option.querySelector('.answer-text').textContent;
-                    if (answerText === result.correct_answer) {
-                        option.classList.add('correct');
-                    } else if (answerText === this.selectedAnswer && !result.is_correct) {
-                        option.classList.add('incorrect');
-                    }
-                });
-
-                // Show feedback after delay
-                setTimeout(() => {
-                    this.showSection('feedback-section');
-
-                    const feedbackIcon = document.getElementById('feedback-icon');
-                    const feedbackTitle = document.getElementById('feedback-title');
-                    const feedbackDetails = document.getElementById('feedback-details');
-                    const scoreEarned = document.getElementById('score-earned');
-                    const correctAnswerDisplay = document.getElementById('correct-answer-display');
-                    const correctAnswerText = document.getElementById('correct-answer-text');
-
-                    if (result.is_correct) {
-                        feedbackIcon.textContent = '✅';
-                        feedbackTitle.textContent = 'Correct!';
-                        feedbackTitle.className = 'feedback-title correct';
-                        feedbackDetails.textContent = 'Great job!';
-                        scoreEarned.textContent = `+${result.score_earned} points`;
-                        correctAnswerDisplay.style.display = 'none';
-                    } else {
-                        feedbackIcon.textContent = '❌';
-                        feedbackTitle.textContent = 'Incorrect';
-                        feedbackTitle.className = 'feedback-title incorrect';
-                        feedbackDetails.textContent = 'Better luck next time!';
-                        scoreEarned.textContent = '+0 points';
-                        correctAnswerDisplay.style.display = 'block';
-                        correctAnswerText.textContent = result.correct_answer;
-                    }
-
-                    this.updateLeaderboard('feedback-leaderboard');
-
-                    // Resume fast polling after feedback
-                    setTimeout(() => {
-                        // Don't restart polling - let it continue
-                    }, 3000);
-
-                }, 1500);
-            }
-
-            async updateLeaderboard(elementId) {
-                try {
-                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/leaderboard/`);
-                    if (!response.ok) throw new Error('Failed to get leaderboard');
-
-                    const data = await response.json();
-                    const players = data.leaderboard || [];
-
-                    const leaderboardElement = document.getElementById(elementId);
-                    leaderboardElement.innerHTML = players.map((player, index) => `
-                        <div class="leaderboard-item ${player.id === this.playerId ? 'current-player' : ''}">
+            const leaderboardElement = document.getElementById(elementId);
+            leaderboardElement.innerHTML = players
+              .map(
+                (player, index) => `
+                        <div class="leaderboard-item ${
+                          player.id === this.playerId ? "current-player" : ""
+                        }">
                             <span class="player-rank">#${index + 1}</span>
-                            <span class="leaderboard-name">${player.nickname}</span>
-                            <span class="leaderboard-score">${player.score}</span>
+                            <span class="leaderboard-name">${
+                              player.nickname
+                            }</span>
+                            <span class="leaderboard-score">${
+                              player.score
+                            }</span>
                         </div>
-                    `).join('');
-
-                } catch (error) {
-                    this.log(`❌ Error updating leaderboard: ${error.message}`);
-                }
-            }
-
-            async showFinalResults() {
-                this.log('🏁 Showing final results');
-
-                if (this.gameTimer) {
-                    clearInterval(this.gameTimer);
-                    this.gameTimer = null;
-                }
-
-                this.showSection('final-results');
-                this.setSyncStatus('🏁 Game Complete', 'active');
-
-                const currentScore = this.playerData ? this.playerData.score : 0;
-                document.getElementById('final-score-display').textContent = currentScore;
-
-                await this.updateLeaderboard('final-leaderboard-display');
-
-                try {
-                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/leaderboard/`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        const players = data.leaderboard || [];
-                        const playerIndex = players.findIndex(p => p.id === this.playerId);
-                        if (playerIndex !== -1) {
-                            document.getElementById('final-rank-display').textContent = `Final Rank: #${playerIndex + 1}`;
-                        }
-                    }
-                } catch (error) {
-                    this.log(`❌ Error getting final rank: ${error.message}`);
-                }
-            }
-
-            showSection(sectionId) {
-                const sections = ['waiting-state', 'question-section', 'feedback-section', 'final-results'];
-                sections.forEach(section => {
-                    const element = document.getElementById(section);
-                    if (element) {
-                        element.classList.remove('active');
-                        element.style.display = section === sectionId ? 'block' : 'none';
-                        if (section === sectionId) {
-                            element.classList.add('active');
-                        }
-                    }
-                });
-            }
-
-            shuffleArray(array) {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-                return array;
-            }
-
-            setSyncStatus(message, type) {
-                const statusEl = document.getElementById('sync-status');
-                statusEl.textContent = message;
-                statusEl.className = `sync-status ${type}`;
-            }
-
-            showError(message) {
-                alert(message);
-                console.error('Game Error:', message);
-            }
-
-            log(message, data = null) {
-                if (this.debugMode) {
-                    console.log(message, data || '');
-                }
-            }
-
-            updateDebugPanel() {
-                document.getElementById('debug-session-id').textContent = this.sessionId || 'None';
-                document.getElementById('debug-player-id').textContent = this.playerId || 'None';
-                document.getElementById('debug-status').textContent = this.currentQuestion ? 'Active' : 'Waiting';
-                document.getElementById('debug-polling').textContent = this.gameTimer ? 'Active (500ms)' : 'Stopped';
-                document.getElementById('debug-time-left').textContent = this.timeLeft + 's';
-            }
-
-            cleanup() {
-                if (this.gameTimer) {
-                    clearInterval(this.gameTimer);
-                }
-            }
+                    `
+              )
+              .join("");
+          } catch (error) {
+            this.log(`❌ Error updating leaderboard: ${error.message}`);
+          }
         }
 
-        // Global game manager instance
-        let gameManager;
+        async showFinalResults() {
+          this.log("🏁 Showing final results");
 
-        // Global functions for UI interaction
-        function selectAnswer(answer, element) {
-            if (gameManager) {
-                gameManager.selectAnswer(answer, element);
+          if (this.gameTimer) {
+            clearInterval(this.gameTimer);
+            this.gameTimer = null;
+          }
+
+          this.showSection("final-results");
+          this.setSyncStatus("🏁 Game Complete", "active");
+
+          const currentScore = this.playerData ? this.playerData.score : 0;
+          document.getElementById("final-score-display").textContent =
+            currentScore;
+
+          await this.updateLeaderboard("final-leaderboard-display");
+
+          try {
+            const response = await fetch(
+              `${this.API_BASE}/sessions/${this.sessionId}/leaderboard/`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              const players = data.leaderboard || [];
+              const playerIndex = players.findIndex(
+                (p) => p.id === this.playerId
+              );
+              if (playerIndex !== -1) {
+                document.getElementById(
+                  "final-rank-display"
+                ).textContent = `Final Rank: #${playerIndex + 1}`;
+              }
             }
+          } catch (error) {
+            this.log(`❌ Error getting final rank: ${error.message}`);
+          }
         }
 
-        function submitAnswer() {
-            if (gameManager) {
-                gameManager.submitAnswer();
+        showSection(sectionId) {
+          const sections = [
+            "waiting-state",
+            "question-section",
+            "feedback-section",
+            "final-results",
+          ];
+          sections.forEach((section) => {
+            const element = document.getElementById(section);
+            if (element) {
+              element.classList.remove("active");
+              element.style.display = section === sectionId ? "block" : "none";
+              if (section === sectionId) {
+                element.classList.add("active");
+              }
             }
+          });
         }
 
-        function playAgain() {
-            localStorage.removeItem('playerData');
-            localStorage.removeItem('sessionId');
-            localStorage.removeItem('playerId');
-            localStorage.removeItem('currentQuizId');
-            localStorage.removeItem('currentQuizCode');
-            localStorage.removeItem('newQuizData');
-
-            window.location.href = '/join-game/';
+        shuffleArray(array) {
+          for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+          }
+          return array;
         }
 
-        function toggleDebugPanel() {
-            const panel = document.getElementById('debug-panel');
-            panel.classList.toggle('active');
+        setSyncStatus(message, type) {
+          const statusEl = document.getElementById("sync-status");
+          statusEl.textContent = message;
+          statusEl.className = `sync-status ${type}`;
         }
 
-        // Initialize synchronized game manager
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('🎮 Initializing Synchronized Game Manager...');
-            gameManager = new SynchronizedGameManager();
+        showError(message) {
+          alert(message);
+          console.error("Game Error:", message);
+        }
 
-            // Show debug panel if no session ID in URL
-            const urlParams = new URLSearchParams(window.location.search);
-            if (!urlParams.get('session') && !urlParams.get('sessionId')) {
-                document.getElementById('debug-panel').classList.add('active');
-            }
+        log(message, data = null) {
+          if (this.debugMode) {
+            console.log(message, data || "");
+          }
+        }
 
-            // Make available globally for debugging
-            window.gameManager = gameManager;
-        });
+        updateDebugPanel() {
+          document.getElementById("debug-session-id").textContent =
+            this.sessionId || "None";
+          document.getElementById("debug-player-id").textContent =
+            this.playerId || "None";
+          document.getElementById("debug-status").textContent = this
+            .currentQuestion
+            ? "Active"
+            : "Waiting";
+          document.getElementById("debug-polling").textContent = this.gameTimer
+            ? "Active (500ms)"
+            : "Stopped";
+          document.getElementById("debug-time-left").textContent =
+            this.timeLeft + "s";
+        }
 
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (gameManager) {
-                gameManager.cleanup();
-            }
-        });
+        cleanup() {
+          if (this.gameTimer) {
+            clearInterval(this.gameTimer);
+          }
+        }
+      }
 
-        // Debug shortcut
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'F2') {
-                toggleDebugPanel();
-            }
-        });
+      // Global game manager instance
+      let gameManager;
+
+      // Global functions for UI interaction
+      function selectAnswer(answer, element) {
+        if (gameManager) {
+          gameManager.selectAnswer(answer, element);
+        }
+      }
+
+      function submitAnswer() {
+        if (gameManager) {
+          gameManager.submitAnswer();
+        }
+      }
+
+      function playAgain() {
+        localStorage.removeItem("playerData");
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("currentQuizId");
+        localStorage.removeItem("currentQuizCode");
+        localStorage.removeItem("newQuizData");
+
+        window.location.href = "/join-game/";
+      }
+
+      function toggleDebugPanel() {
+        const panel = document.getElementById("debug-panel");
+        panel.classList.toggle("active");
+      }
+
+      // Initialize synchronized game manager
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("🎮 Initializing Synchronized Game Manager...");
+        gameManager = new SynchronizedGameManager();
+
+        // Show debug panel if no session ID in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.get("session") && !urlParams.get("sessionId")) {
+          document.getElementById("debug-panel").classList.add("active");
+        }
+
+        // Make available globally for debugging
+        window.gameManager = gameManager;
+      });
+
+      // Cleanup on page unload
+      window.addEventListener("beforeunload", () => {
+        if (gameManager) {
+          gameManager.cleanup();
+        }
+      });
+
+      // Debug shortcut
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "F2") {
+          toggleDebugPanel();
+        }
+      });
     </script>
-</body>
+  </body>
 </html>
