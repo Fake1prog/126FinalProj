@@ -26,13 +26,13 @@
   - Log in/out securely  
 - **AI-Generated Quizzes**  
   - Input quiz title, topic, and difficulty (Easy, Medium, Hard)  
-  - Backend API calls an AI service to generate 10 questions automatically  
+  - Backend API calls AI services (OpenRouter and DeepSeek) to generate 10 questions automatically  
 - **Dashboard (“My Quizzes”)**  
   - View a list of quizzes you have created  
   - See quiz metadata (title, topic, difficulty, join code, number of questions, creation date)  
 - **Quiz Creation Flow**  
   1. Fill out “Create New Quiz” form  
-  2. Backend calls AI endpoint  
+  2. Backend calls OpenRouter or DeepSeek API  
   3. Quiz is persisted in the database with a unique 6-character join code  
 - **Hosting a Quiz (Host-​Game)**  
   - Host sees a waiting room with join code and connected players  
@@ -68,6 +68,7 @@
   - Gunicorn (production WSGI server)  
   - SQLite / PostgreSQL (configurable via Django settings)  
   - Whitenoise (static file serving)  
+  - OpenRouter & DeepSeek (AI quiz generation)  
 - **Front End**  
   - HTML5 / CSS3 (custom styles)  
   - Vanilla JavaScript (ES6+)  
@@ -135,9 +136,6 @@ macOS / Linux
 
 ## Running the Development Server
 
-
-## Running the Development Server
-
 With the virtual environment activated and migrations applied, start the Django development server:
 
 ```bash
@@ -151,6 +149,8 @@ http://127.0.0.1:8000/
 ```
 
 ## Usage
+
+Note: Users can join a quiz without logging in, but they must be logged in to create a quiz.
 
 1. **Register & Log In**  
    - Visit `/register/` to create a new account.  
@@ -223,11 +223,10 @@ This project is deployed on Render. To deploy your own instance:
 ``` 
 5. **Environment Variables:**: 
     SECRET_KEY (your Django secret key)
-
     DEBUG (set to False in production)
+    Any AI-API credentials used for quiz generation (e.g., OpenRouter, DeepSeek API keys)
 
-    Any AI-API credentials used for quiz generation (e.g., OpenAI key)
-6. **Publish** → Render will provide a public URL. 
+7. **Publish** → Render will provide a public URL. 
 
 ## Web Demo
 

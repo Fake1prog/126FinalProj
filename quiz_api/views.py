@@ -270,7 +270,7 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def game_state(self, request, pk=None):
-        """Get current game state with precise timing """
+        """Get current game state with precise timing and response tracking"""
         try:
             session = self.get_object()
 
@@ -281,6 +281,7 @@ class GameSessionViewSet(viewsets.ModelViewSet):
             time_left = 0
             question_start_time = None
             auto_advanced = False
+            responses_received = 0
 
             if session.status == 'active' and session.current_question_index < total_questions:
                 current_question = questions[session.current_question_index]
@@ -294,6 +295,13 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
                 elapsed = (timezone.now() - question_start_time).total_seconds()
                 time_left = max(0, 20 - elapsed)  # 20 second questions
+
+                # FIXED: Count responses for current question
+                responses_received = PlayerAnswer.objects.filter(
+                    player__session=session,
+                    question=current_question,
+                    player__is_active=True
+                ).count()
 
                 # 🚀 AUTO-ADVANCE LOGIC: If time is up, automatically move to next question
                 if time_left <= 0:
@@ -314,7 +322,11 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                         return Response({
                             'session_id': session.id,
                             'status': 'finished',
+                            'current_question_index': session.current_question_index,
+                            'total_questions': total_questions,
                             'final_scores': PlayerSerializer(players, many=True).data,
+                            'players': PlayerSerializer(players, many=True).data,  # Add this for compatibility
+                            'player_count': players.count(),  # Add this
                             'server_time': timezone.now().isoformat()
                         })
                     else:
@@ -328,10 +340,49 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                         time_left = 20  # Fresh timer for new question
                         auto_advanced = True
 
+                        # Reset response count for new question
+                        responses_received = 0
+
                         logger.info(f"✅ Auto-advanced to question {session.current_question_index + 1}")
 
-            # Get active players with scores
+            # FIXED: Handle finished status properly
+            elif session.status == 'finished' or session.current_question_index >= total_questions:
+                if session.status != 'finished':
+                    session.status = 'finished'
+                    session.ended_at = timezone.now()
+                    session.save()
+
+                players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+                return Response({
+                    'session_id': session.id,
+                    'status': 'finished',
+                    'current_question_index': session.current_question_index,
+                    'total_questions': total_questions,
+                    'final_scores': PlayerSerializer(players, many=True).data,
+                    'players': PlayerSerializer(players, many=True).data,  # Add this for compatibility
+                    'player_count': players.count(),  # Add this
+                    'server_time': timezone.now().isoformat()
+                })
+
+            # Get active players with scores and response status
             players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+
+            # ENHANCED: Add response status to each player
+            players_data = []
+            for player in players:
+                player_data = PlayerSerializer(player).data
+
+                # Check if this player has answered the current question
+                if current_question:
+                    has_answered = PlayerAnswer.objects.filter(
+                        player=player,
+                        question=current_question
+                    ).exists()
+                    player_data['has_answered'] = has_answered
+                else:
+                    player_data['has_answered'] = False
+
+                players_data.append(player_data)
 
             response_data = {
                 'session_id': session.id,
@@ -341,10 +392,11 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                 'time_left': round(time_left, 1),
                 'question_start_time': question_start_time.isoformat() if question_start_time else None,
                 'current_question': QuestionSerializer(current_question).data if current_question else None,
-                'players': PlayerSerializer(players, many=True).data,
+                'players': players_data,
                 'player_count': players.count(),
+                'responses_received': responses_received,  # FIXED: Add response count
                 'server_time': timezone.now().isoformat(),
-                'auto_advanced': auto_advanced  # NEW: Flag to indicate auto-advance happened
+                'auto_advanced': auto_advanced
             }
 
             return Response(response_data)
@@ -354,6 +406,7 @@ class GameSessionViewSet(viewsets.ModelViewSet):
                 {'error': 'Session not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
 
     @action(detail=True, methods=['post'])
     def start_game(self, request, pk=None):
