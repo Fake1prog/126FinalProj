@@ -67,6 +67,9 @@ class GameSession(models.Model):
     ended_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ADD THIS LINE - NEW FIELD FOR TIMING SYNCHRONIZATION
+    question_started_at = models.DateTimeField(null=True, blank=True, help_text='When the current question started')
+
     def __str__(self):
         return f"Session for {self.quiz.title} - {self.status}"
 

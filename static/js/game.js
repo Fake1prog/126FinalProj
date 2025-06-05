@@ -1,4 +1,3 @@
-// Game Management
 class GameManager {
     constructor() {
         this.sessionId = null;
@@ -7,6 +6,9 @@ class GameManager {
         this.timer = null;
         this.timeLeft = 20;
         this.isHost = false;
+        this.pollTimer = null;
+        this.questionStartTime = null;
+        this.serverTimeOffset = 0; // To sync with server time
         this.initializeGame();
     }
 
@@ -20,7 +22,7 @@ class GameManager {
         }
     }
 
-    // HOST FUNCTIONS
+    // HOST FUNCTIONS - Minimal changes, host just controls flow
     async initializeHost() {
         this.isHost = true;
         const quizId = localStorage.getItem('currentQuizId');
@@ -32,13 +34,8 @@ class GameManager {
             return;
         }
 
-        // Display join code
         document.getElementById('join-code').textContent = joinCode;
-
-        // Start a new session
         await this.createSession(quizId);
-
-        // Start polling for players
         this.pollForPlayers();
     }
 
@@ -57,10 +54,8 @@ class GameManager {
             const response = await api.getSession(this.sessionId);
             const players = response.players || [];
 
-            // Update player count
             document.getElementById('player-count').textContent = players.length;
 
-            // Update player list
             const playerList = document.getElementById('player-list');
             playerList.innerHTML = players.map(player => `
                 <div class="player-item">
@@ -68,14 +63,12 @@ class GameManager {
                 </div>
             `).join('');
 
-            // Enable start button if we have players
             const startBtn = document.getElementById('start-btn');
             if (players.length > 0) {
                 startBtn.disabled = false;
                 startBtn.textContent = `Start Game (${players.length} players)`;
             }
 
-            // Continue polling if game hasn't started
             if (response.status === 'waiting') {
                 setTimeout(() => this.pollForPlayers(), 2000);
             }
@@ -84,154 +77,209 @@ class GameManager {
         }
     }
 
-    async getCurrentQuestion() {
-        try {
-            const session = await api.getSession(this.sessionId);
-            console.log("sezzion : ", session);
-            return session.current_question;
-        } catch (error) {
-            console.error('Error fetching current question:', error);
-            return null;
-        }
-    }
-
-    async startGame() {
-        try {
-            const response = await api.startGame(this.sessionId);
-            if (response.current_question) {
-                document.getElementById('waiting-room').style.display = 'none';
-                document.getElementById('game-controls').style.display = 'block';
-                this.displayQuestion(response.current_question);
-            }
-        } catch (error) {
-            alert('Error starting game: ' + error.message);
-        }
-    }
-
-    // PLAYER FUNCTIONS
+    // PLAYER FUNCTIONS - MAJOR UPDATES FOR SYNC
     async initializePlayer() {
         this.isHost = false;
+
+        // Get session ID from URL parameter (from join-game redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionIdFromUrl = urlParams.get('session');
+
+        // Try URL first, then localStorage as fallback
+        this.sessionId = sessionIdFromUrl || localStorage.getItem('sessionId');
+
         const playerData = JSON.parse(localStorage.getItem('playerData') || '{}');
 
-        if (!playerData.player || !playerData.session) {
+        if (!this.sessionId || !playerData.player) {
+            console.error('Missing session or player data');
             alert('No game session found');
             window.location.href = '/join-game/';
             return;
         }
 
         this.playerId = playerData.player.id;
-        this.sessionId = playerData.session.id;
+
+        console.log(`✅ Player initialized: ${playerData.player.nickname} in session ${this.sessionId}`);
 
         document.getElementById('player-name').textContent = playerData.player.nickname;
-        document.getElementById('score').textContent = playerData.player.score;
+        document.getElementById('score').textContent = playerData.player.score || 0;
 
-        // Start polling for game updates
-        this.pollForGameUpdates();
+        // Calculate server time offset for sync
+        await this.syncServerTime();
+
+        // Start FAST polling for game updates - KEY CHANGE!
+        this.startFastPolling();
     }
 
-    async pollForGameUpdates() {
+    async syncServerTime() {
         try {
-            const response = await api.getSession(this.sessionId);
+            const requestTime = Date.now();
+            const response = await api.getGameState(this.sessionId);
+            const responseTime = Date.now();
 
-            if (response.status === 'active') {
-                // Game has started
-                document.getElementById('waiting').style.display = 'none';
-                document.getElementById('question-display').style.display = 'block';
-                console.log("response = ", response);
-                // Get current question
-                const currentQuestion = await this.getCurrentQuestion();
-                console.log(currentQuestion);
-                if (currentQuestion) {
-                    this.displayQuestionForPlayer(currentQuestion);
-                }
-            } else if (response.status === 'finished') {
-                // Game ended
-                this.showFinalResults();
-            } else {
-                // Keep polling
-                setTimeout(() => this.pollForGameUpdates(), 1000);
+            if (response.server_time) {
+                const serverTime = new Date(response.server_time).getTime();
+                const networkDelay = (responseTime - requestTime) / 2;
+                this.serverTimeOffset = serverTime - (responseTime - networkDelay);
+                console.log(`⏱️ Server time synced, offset: ${this.serverTimeOffset}ms`);
             }
         } catch (error) {
-            console.error('Error polling for updates:', error);
+            console.error('Failed to sync server time:', error);
         }
     }
 
-    // SHARED FUNCTIONS
-    displayQuestion(question) {
-        this.currentQuestion = question;
-
-        if (this.isHost) {
-            document.getElementById('question-number').textContent = question.order + 1;
-            document.getElementById('question-text').textContent = question.question_text;
-            console.log(question);
-            const answersDiv = document.getElementById('answers');
-            const allAnswers = [question.correct_answer, ...question.wrong_answers];
-            const shuffled = this.shuffleArray(allAnswers);
-
-            answersDiv.innerHTML = shuffled.map((answer, idx) => `
-                <div class="answer-option">${idx + 1}. ${answer}</div>
-            `).join('');
-        }
-
-        this.startTimer();
+    getServerTime() {
+        return Date.now() + this.serverTimeOffset;
     }
 
+    // NEW: Fast polling for real-time updates
+    startFastPolling() {
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+        }
+
+        console.log('🚀 Starting fast polling for game state...');
+
+        // Poll every 500ms during active gameplay for smooth sync
+        this.pollTimer = setInterval(async () => {
+            try {
+                const gameState = await api.getGameState(this.sessionId);
+                this.handleGameStateUpdate(gameState);
+            } catch (error) {
+                console.error('Polling error:', error);
+                // If we get repeated errors, slow down polling
+                if (this.pollTimer) {
+                    clearInterval(this.pollTimer);
+                    setTimeout(() => this.startFastPolling(), 2000);
+                }
+            }
+        }, 500); // 500ms = 2 times per second
+    }
+
+    // NEW: Handle real-time game state updates
+    async handleGameStateUpdate(gameState) {
+        console.log('📊 Game state update:', gameState.status, `Q${gameState.current_question_index + 1}`, `${gameState.time_left}s left`);
+
+        if (gameState.status === 'waiting') {
+            this.showWaitingState();
+            return;
+        }
+
+        if (gameState.status === 'finished') {
+            this.showFinalResults();
+            return;
+        }
+
+        if (gameState.status === 'active') {
+            // Game is active, check if we need to show new question
+            const questionChanged = this.currentQuestion?.id !== gameState.current_question?.id;
+
+            if (questionChanged && gameState.current_question) {
+                console.log('📝 New question detected:', gameState.current_question.question_text.substring(0, 50));
+                this.currentQuestion = gameState.current_question;
+                this.questionStartTime = new Date(gameState.question_start_time);
+                this.displayQuestionForPlayer(gameState.current_question);
+            }
+
+            // Update timer with server time
+            this.updateTimerFromServer(gameState.time_left);
+
+            // Show question interface if not already shown
+            if (document.getElementById('waiting').style.display !== 'none') {
+                document.getElementById('waiting').style.display = 'none';
+                document.getElementById('question-display').style.display = 'block';
+            }
+        }
+    }
+
+    showWaitingState() {
+        document.getElementById('waiting').style.display = 'block';
+        document.getElementById('question-display').style.display = 'none';
+        document.getElementById('feedback').style.display = 'none';
+    }
+
+    // UPDATED: Display question without starting local timer
     displayQuestionForPlayer(question) {
         this.currentQuestion = question;
         document.getElementById('question-text').textContent = question.question_text;
-        console.log("haha -- ", question);
+
         const allAnswers = [question.correct_answer, ...question.wrong_answers];
         const shuffled = this.shuffleArray(allAnswers);
 
         const buttons = document.querySelectorAll('.answer-btn');
         shuffled.forEach((answer, idx) => {
-            buttons[idx].textContent = answer;
-            buttons[idx].dataset.answer = answer;
+            if (buttons[idx]) {
+                buttons[idx].textContent = answer;
+                buttons[idx].dataset.answer = answer;
+                buttons[idx].disabled = false; // Re-enable for new question
+                buttons[idx].style.opacity = '1';
+            }
         });
 
-        this.startTimer();
+        // Reset feedback display
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('question-display').style.display = 'block';
     }
-    
 
-    startTimer() {
-        this.timeLeft = 20;
+    // NEW: Update timer based on server time instead of local timer
+    updateTimerFromServer(timeLeft) {
+        this.timeLeft = Math.max(0, Math.ceil(timeLeft));
         this.updateTimerDisplay();
 
-        this.timer = setInterval(() => {
-            this.timeLeft--;
-            this.updateTimerDisplay();
-
-            if (this.timeLeft <= 0) {
-                this.stopTimer();
-                if (this.isHost) {
-                    this.nextQuestion();
-                } else {
-                    this.showFeedback(false, 0);
-                }
-            }
-        }, 1000);
+        // If time is up, disable answer buttons
+        if (this.timeLeft <= 0) {
+            this.disableAnswerButtons();
+        }
     }
 
-    stopTimer() {
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
+    disableAnswerButtons() {
+        const buttons = document.querySelectorAll('.answer-btn');
+        buttons.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+        });
     }
 
     updateTimerDisplay() {
         const timerElement = document.getElementById('timer');
         if (timerElement) {
             timerElement.textContent = this.timeLeft;
+
+            // Add visual warning when time is low
+            if (this.timeLeft <= 5) {
+                timerElement.style.color = '#dc2626';
+                timerElement.style.fontWeight = 'bold';
+            } else {
+                timerElement.style.color = '#374151';
+                timerElement.style.fontWeight = 'normal';
+            }
         }
     }
 
+    // UPDATED: Submit answer with server sync
     async selectAnswer(answerIndex) {
-        const buttons = document.querySelectorAll('.answer-btn');
-        const selectedAnswer = buttons[answerIndex].dataset.answer;
-        const timeTaken = 20 - this.timeLeft;
+        if (this.timeLeft <= 0) {
+            console.log('⏰ Time expired, cannot submit answer');
+            return;
+        }
 
-        this.stopTimer();
+        const buttons = document.querySelectorAll('.answer-btn');
+        if (!buttons[answerIndex]) return;
+
+        const selectedAnswer = buttons[answerIndex].dataset.answer;
+
+        // Calculate time taken based on server time
+        let timeTaken = 20;
+        if (this.questionStartTime) {
+            const now = this.getServerTime();
+            const startTime = this.questionStartTime.getTime();
+            timeTaken = Math.max(0, (now - startTime) / 1000);
+        }
+
+        console.log(`✅ Submitting answer: "${selectedAnswer}" (time: ${timeTaken.toFixed(1)}s)`);
+
+        // Immediately disable all buttons
+        this.disableAnswerButtons();
 
         try {
             const response = await api.submitAnswer(
@@ -241,10 +289,20 @@ class GameManager {
                 timeTaken
             );
 
+            console.log('📊 Answer result:', response);
             this.showFeedback(response.is_correct, response.score_earned);
+
+            // Update score display
             document.getElementById('score').textContent = response.total_score;
+
         } catch (error) {
             console.error('Error submitting answer:', error);
+            // Re-enable buttons if submission failed
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            });
         }
     }
 
@@ -254,31 +312,16 @@ class GameManager {
 
         const result = document.getElementById('result');
         result.textContent = isCorrect ? 'Correct! ✓' : 'Wrong! ✗';
-        result.style.color = isCorrect ? 'green' : 'red';
+        result.style.color = isCorrect ? '#16a34a' : '#dc2626';
 
         document.getElementById('points').textContent = points;
 
-        // Wait for next question
-        setTimeout(() => {
-            document.getElementById('feedback').style.display = 'none';
-            this.pollForGameUpdates();
-        }, 3000);
+        console.log(`📊 Feedback shown: ${isCorrect ? 'CORRECT' : 'WRONG'} (+${points} points)`);
+
+        // Feedback will be hidden when next question loads via polling
     }
 
-    async nextQuestion() {
-        try {
-            const response = await api.nextQuestion(this.sessionId);
-
-            if (response.status === 'Quiz completed') {
-                this.showHostResults(response.final_scores);
-            } else {
-                this.displayQuestion(response.current_question);
-            }
-        } catch (error) {
-            console.error('Error getting next question:', error);
-        }
-    }
-
+    // SHARED FUNCTIONS (unchanged)
     shuffleArray(array) {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -288,28 +331,36 @@ class GameManager {
         return shuffled;
     }
 
-    showHostResults(scores) {
-        document.getElementById('game-controls').style.display = 'none';
-        document.getElementById('leaderboard').innerHTML = `
-            <h2>Final Results</h2>
-            ${scores.map((player, idx) => `
-                <div class="final-score-item">
-                    ${idx + 1}. ${player.nickname} - ${player.score} points
-                </div>
-            `).join('')}
-            <button onclick="window.location.href='/dashboard/'">Back to Dashboard</button>
-        `;
+    async showFinalResults() {
+        console.log('🏁 Game finished, showing results');
+
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+        }
+
+        try {
+            const response = await api.getPlayerResults(this.playerId);
+
+            document.getElementById('waiting').style.display = 'none';
+            document.getElementById('question-display').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('final-results').style.display = 'block';
+
+            document.getElementById('final-score').textContent = response.player.score;
+
+        } catch (error) {
+            console.error('Error loading final results:', error);
+        }
     }
 
-    async showFinalResults() {
-        const response = await api.getPlayerResults(this.playerId);
-        document.getElementById('waiting').style.display = 'none';
-        document.getElementById('question-display').style.display = 'none';
-        document.getElementById('feedback').style.display = 'none';
-        document.getElementById('final-results').style.display = 'block';
-
-        document.getElementById('final-score').textContent = response.player.score;
-        // Add leaderboard display here
+    // Cleanup
+    cleanup() {
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+        }
     }
 }
 
@@ -326,14 +377,32 @@ function selectAnswer(index) {
     gameManager.selectAnswer(index);
 }
 
-function showResults() {
-    // Show current results
-}
-
 // Initialize game manager
 const gameManager = new GameManager();
 
-// Add missing API methods
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (gameManager) {
+        gameManager.cleanup();
+    }
+});
+
+// ADD NEW API METHODS
+QuizAPI.prototype.getGameState = async function(sessionId) {
+    const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/game_state/`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+        credentials: 'include'
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to get game state: ${response.status}`);
+    }
+
+    return response.json();
+};
+
+// Updated existing methods to handle timing
 QuizAPI.prototype.startSession = async function(quizId) {
     const response = await fetch(`${API_BASE_URL}/quizzes/${quizId}/start_session/`, {
         method: 'POST',

@@ -268,15 +268,115 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
         return Response(response_data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['get'])
+    def game_state(self, request, pk=None):
+        """Get current game state with precise timing - REAL-TIME ENDPOINT"""
+        try:
+            session = self.get_object()
+
+            # Get current question with timing
+            questions = session.quiz.questions.all().order_by('order')
+            total_questions = questions.count()
+            current_question = None
+            time_left = 0
+            question_start_time = None
+
+            if session.status == 'active' and session.current_question_index < total_questions:
+                current_question = questions[session.current_question_index]
+
+                # Calculate time left based on when question started
+                if session.question_started_at:
+                    question_start_time = session.question_started_at
+                else:
+                    # Fallback to session updated time
+                    question_start_time = session.updated_at or timezone.now()
+
+                elapsed = (timezone.now() - question_start_time).total_seconds()
+                time_left = max(0, 20 - elapsed)  # 20 second questions
+
+            # Get active players with scores
+            players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+
+            response_data = {
+                'session_id': session.id,
+                'status': session.status,
+                'current_question_index': session.current_question_index,
+                'total_questions': total_questions,
+                'time_left': round(time_left, 1),
+                'question_start_time': question_start_time.isoformat() if question_start_time else None,
+                'current_question': QuestionSerializer(current_question).data if current_question else None,
+                'players': PlayerSerializer(players, many=True).data,
+                'player_count': players.count(),
+                'server_time': timezone.now().isoformat()
+            }
+
+            return Response(response_data)
+
+        except GameSession.DoesNotExist:
+            return Response(
+                {'error': 'Session not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['get'])
+    def game_state(self, request, pk=None):
+        """Get current game state with precise timing - REAL-TIME ENDPOINT"""
+        try:
+            session = self.get_object()
+
+            # Get current question with timing
+            questions = session.quiz.questions.all().order_by('order')
+            total_questions = questions.count()
+            current_question = None
+            time_left = 0
+            question_start_time = None
+
+            if session.status == 'active' and session.current_question_index < total_questions:
+                current_question = questions[session.current_question_index]
+
+                # Calculate time left based on when question started
+                # We'll store question_start_time in session (need to add this field)
+                # For now, calculate based on updated_at as approximate start time
+                if hasattr(session, 'question_started_at') and session.question_started_at:
+                    question_start_time = session.question_started_at
+                else:
+                    # Fallback to session updated time
+                    question_start_time = session.updated_at or timezone.now()
+
+                elapsed = (timezone.now() - question_start_time).total_seconds()
+                time_left = max(0, 20 - elapsed)  # 20 second questions
+
+            # Get active players with scores
+            players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
+
+            response_data = {
+                'session_id': session.id,
+                'status': session.status,
+                'current_question_index': session.current_question_index,
+                'total_questions': total_questions,
+                'time_left': round(time_left, 1),
+                'question_start_time': question_start_time.isoformat() if question_start_time else None,
+                'current_question': QuestionSerializer(current_question).data if current_question else None,
+                'players': PlayerSerializer(players, many=True).data,
+                'player_count': players.count(),
+                'server_time': timezone.now().isoformat()
+            }
+
+            return Response(response_data)
+
+        except GameSession.DoesNotExist:
+            return Response(
+                {'error': 'Session not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
     @action(detail=True, methods=['post'])
     def start_game(self, request, pk=None):
-        """Start the game (host only)"""
+        """Start the game (host only) - UPDATED WITH TIMING"""
         session = self.get_object()
-        print(f"START GAME REQUEST for session: {session.id}")  # Debug log
 
         # Check if user is the host
         if request.user != session.quiz.host:
-            print(f"UNAUTHORIZED START GAME: {request.user} is not {session.quiz.host}")  # Debug log
             return Response(
                 {'error': 'Only the host can start the game'},
                 status=status.HTTP_403_FORBIDDEN
@@ -284,29 +384,31 @@ class GameSessionViewSet(viewsets.ModelViewSet):
 
         # Check if there are players
         if not session.players.exists():
-            print(f"NO PLAYERS IN SESSION: {session.id}")  # Debug log
             return Response(
                 {'error': 'No players have joined yet'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Start the game
+        # Start the game with precise timing
         session.status = 'active'
         session.started_at = timezone.now()
+        session.current_question_index = 0
+        session.question_started_at = timezone.now()  # ADD THIS LINE
         session.save()
-        print(f"GAME STARTED for session: {session.id}")  # Debug log
 
         # Get first question
         first_question = session.quiz.questions.first()
 
         return Response({
             'status': 'Game started',
-            'current_question': QuestionSerializer(first_question).data if first_question else None
+            'current_question': QuestionSerializer(first_question).data if first_question else None,
+            'question_started_at': timezone.now().isoformat(),
+            'server_time': timezone.now().isoformat()
         })
 
     @action(detail=True, methods=['post'])
     def next_question(self, request, pk=None):
-        """Move to the next question (host only)"""
+        """Move to the next question (host only) - UPDATED WITH TIMING"""
         session = self.get_object()
 
         # Check if user is the host
@@ -327,23 +429,25 @@ class GameSessionViewSet(viewsets.ModelViewSet):
             session.save()
 
             # Return final results
+            players = session.players.filter(is_active=True).order_by('-score', 'joined_at')
             return Response({
                 'status': 'Quiz completed',
-                'final_scores': PlayerSerializer(
-                    session.players.filter(is_active=True),
-                    many=True
-                ).data
+                'final_scores': PlayerSerializer(players, many=True).data
             })
 
+        # Set new question start time - CRITICAL FOR SYNC!
+        session.question_started_at = timezone.now()
         session.save()
 
         # Get current question
-        current_question = session.quiz.questions.all()[session.current_question_index]
+        current_question = session.quiz.questions.all().order_by('order')[session.current_question_index]
 
         return Response({
             'current_question': QuestionSerializer(current_question).data,
             'question_number': session.current_question_index + 1,
-            'total_questions': total_questions
+            'total_questions': total_questions,
+            'question_started_at': timezone.now().isoformat(),
+            'server_time': timezone.now().isoformat()
         })
 
     @action(detail=True, methods=['get'])

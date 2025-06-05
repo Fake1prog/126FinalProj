@@ -602,6 +602,8 @@
               console.log(`✅ Redirecting with session ID: ${sessionId}`);
 
               setTimeout(() => {
+                const sessionId = this.joinedData.session.id;
+                console.log(`✅ Redirecting with session ID: ${sessionId}`);
                 // OLD (causes session ID problem):
                 // window.location.href = '/play-game/';
 

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Play Quiz - Quiz Show Platform</title>
     <style>
+        /* Keep all your existing styles - no changes needed */
         body {
             margin: 0;
             padding: 0;
@@ -553,6 +554,33 @@
                 font-size: 0.95rem;
             }
         }
+
+        /* NEW: Sync status indicator */
+        .sync-status {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #16a34a;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+            display: none;
+        }
+
+        .sync-status.warning {
+            background: #f59e0b;
+        }
+
+        .sync-status.error {
+            background: #dc2626;
+        }
+
+        .sync-status.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -563,7 +591,13 @@
         <div>Player ID: <span id="debug-player-id">Loading...</span></div>
         <div>Game Status: <span id="debug-status">Loading...</span></div>
         <div>Polling: <span id="debug-polling">Stopped</span></div>
+        <div>Time Left: <span id="debug-time-left">-</span></div>
         <button onclick="toggleDebugPanel()" style="margin-top: 8px; padding: 4px 8px; border: none; background: #6366f1; color: white; border-radius: 4px; cursor: pointer;">Hide</button>
+    </div>
+
+    <!-- NEW: Sync status indicator -->
+    <div class="sync-status" id="sync-status">
+        🔄 Syncing...
     </div>
 
     <div class="main-container">
@@ -661,70 +695,61 @@
         </div>
     </div>
 
-    <!-- ADD THIS SCRIPT RIGHT AT THE TOP OF YOUR play-game.html, BEFORE ANY OTHER SCRIPTS -->
-
-<script>
-// AUTOMATIC SESSION ID DETECTION AND REDIRECT
-// This runs immediately when the page loads and fixes the session ID issue
-(function() {
-    console.log('🔧 Auto-detecting session ID...');
-
-    // Check if session ID is already in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlSessionId = urlParams.get('session');
-
-    if (urlSessionId) {
-        console.log(`✅ Session ID already in URL: ${urlSessionId}`);
-        return; // URL is correct, let the page load normally
-    }
-
-    console.log('🔍 No session ID in URL, checking localStorage...');
-
-    // Try to get session ID from localStorage
-    try {
-        const playerDataString = localStorage.getItem('playerData');
-
-        if (!playerDataString) {
-            console.log('❌ No playerData found in localStorage');
-            alert('No game session found. Please join a quiz first.');
-            window.location.href = '/join-game/';
-            return;
-        }
-
-        const playerData = JSON.parse(playerDataString);
-        const sessionId = playerData.session?.id;
-
-        if (sessionId) {
-            console.log(`✅ Found session ID in localStorage: ${sessionId}`);
-            console.log('🔄 Automatically redirecting with session ID...');
-
-            // Redirect with session ID in URL
-            const newUrl = `/play-game/?session=${sessionId}`;
-            window.location.replace(newUrl);
-            return;
-
-        } else {
-            console.log('❌ No session ID found in playerData');
-            console.log('PlayerData contents:', playerData);
-            alert('Invalid game session data. Please join a quiz again.');
-            window.location.href = '/join-game/';
-            return;
-        }
-
-    } catch (error) {
-        console.error('❌ Error reading localStorage:', error);
-        alert('Error loading game session. Please try joining again.');
-        window.location.href = '/join-game/';
-        return;
-    }
-})();
-
-console.log('🎮 Session ID auto-detection completed');
-</script>
-
+    <!-- UPDATED SCRIPT WITH REAL-TIME SYNCHRONIZATION -->
     <script>
-        // UNIFIED GAME MANAGER - Combines all functionality
-        class UnifiedGameManager {
+        // AUTO SESSION ID DETECTION AND REDIRECT (Keep this part unchanged)
+        (function() {
+            console.log('🔧 Auto-detecting session ID...');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlSessionId = urlParams.get('session');
+
+            if (urlSessionId) {
+                console.log(`✅ Session ID already in URL: ${urlSessionId}`);
+                return;
+            }
+
+            console.log('🔍 No session ID in URL, checking localStorage...');
+
+            try {
+                const playerDataString = localStorage.getItem('playerData');
+
+                if (!playerDataString) {
+                    console.log('❌ No playerData found in localStorage');
+                    alert('No game session found. Please join a quiz first.');
+                    window.location.href = '/join-game/';
+                    return;
+                }
+
+                const playerData = JSON.parse(playerDataString);
+                const sessionId = playerData.session?.id;
+
+                if (sessionId) {
+                    console.log(`✅ Found session ID in localStorage: ${sessionId}`);
+                    console.log('🔄 Automatically redirecting with session ID...');
+
+                    const newUrl = `/play-game/?session=${sessionId}`;
+                    window.location.replace(newUrl);
+                    return;
+
+                } else {
+                    console.log('❌ No session ID found in playerData');
+                    console.log('PlayerData contents:', playerData);
+                    alert('Invalid game session data. Please join a quiz again.');
+                    window.location.href = '/join-game/';
+                    return;
+                }
+
+            } catch (error) {
+                console.error('❌ Error reading localStorage:', error);
+                alert('Error loading game session. Please try joining again.');
+                window.location.href = '/join-game/';
+                return;
+            }
+        })();
+
+        // REAL-TIME SYNCHRONIZED GAME MANAGER
+        class SynchronizedGameManager {
             constructor() {
                 this.API_BASE = '/api';
                 this.csrfToken = '';
@@ -733,15 +758,15 @@ console.log('🎮 Session ID auto-detection completed');
                 this.playerId = null;
                 this.sessionId = null;
                 this.playerData = null;
-                this.sessionData = null;
                 this.currentQuestion = null;
                 this.selectedAnswer = null;
                 this.hasAnswered = false;
                 this.gameTimer = null;
-                this.questionTimer = null;
                 this.timeLeft = 20;
                 this.totalQuestions = 5;
                 this.currentQuestionIndex = 0;
+                this.serverTimeOffset = 0;
+                this.questionStartTime = null;
 
                 // Debug mode
                 this.debugMode = true;
@@ -750,10 +775,9 @@ console.log('🎮 Session ID auto-detection completed');
             }
 
             async init() {
-                this.log('🚀 Initializing Unified Game Manager...');
+                this.log('🚀 Initializing Synchronized Game Manager...');
 
                 try {
-                    // Get session ID from multiple sources
                     this.sessionId = this.getSessionId();
 
                     if (!this.sessionId) {
@@ -764,10 +788,9 @@ console.log('🎮 Session ID auto-detection completed');
                     this.log(`✅ Session ID found: ${this.sessionId}`);
                     this.updateDebugPanel();
 
-                    // Fetch CSRF token
                     await this.fetchCSRFToken();
+                    await this.syncServerTime();
 
-                    // Try to get player data from localStorage first
                     const storedPlayerData = localStorage.getItem('playerData');
                     if (storedPlayerData) {
                         const gameData = JSON.parse(storedPlayerData);
@@ -776,11 +799,8 @@ console.log('🎮 Session ID auto-detection completed');
                         this.log(`📱 Player data from localStorage: ${this.playerData.nickname}`);
                     }
 
-                    // Update UI with available player info
                     this.updatePlayerInfo();
-
-                    // Start game polling
-                    this.startGamePolling();
+                    this.startFastPolling(); // FAST POLLING FOR REAL-TIME SYNC
 
                 } catch (error) {
                     this.log(`❌ Initialization error: ${error.message}`);
@@ -789,7 +809,6 @@ console.log('🎮 Session ID auto-detection completed');
             }
 
             getSessionId() {
-                // Try multiple sources for session ID
                 const sources = [
                     () => new URLSearchParams(window.location.search).get('session'),
                     () => new URLSearchParams(window.location.search).get('sessionId'),
@@ -797,14 +816,9 @@ console.log('🎮 Session ID auto-detection completed');
                     () => window.SESSION_ID,
                     () => window.sessionId,
                     () => document.body.dataset.sessionId,
-                    () => document.body.dataset.session,
                     () => {
                         const el = document.querySelector('[data-session-id]');
                         return el ? el.dataset.sessionId : null;
-                    },
-                    () => {
-                        const match = window.location.pathname.match(/\/(\d+)\/?$/);
-                        return match ? match[1] : null;
                     }
                 ];
 
@@ -812,7 +826,7 @@ console.log('🎮 Session ID auto-detection completed');
                     try {
                         const id = source();
                         if (id && id !== 'null' && id !== 'undefined') {
-                            this.log(`✅ Session ID found from source: ${id}`);
+                            this.log(`✅ Session ID found: ${id}`);
                             return id;
                         }
                     } catch (e) {
@@ -832,19 +846,39 @@ console.log('🎮 Session ID auto-detection completed');
                     if (response.ok) {
                         const data = await response.json();
                         this.csrfToken = data.csrfToken;
-                        this.log('✅ CSRF token fetched from API');
-                    } else {
-                        throw new Error('API endpoint failed');
+                        this.log('✅ CSRF token fetched');
                     }
                 } catch (error) {
-                    this.log('⚠️ API CSRF fetch failed, trying cookie fallback');
                     this.csrfToken = this.getCookie('csrftoken');
-                    if (this.csrfToken) {
-                        this.log('✅ CSRF token found in cookie');
-                    } else {
-                        this.log('❌ No CSRF token available');
-                    }
+                    this.log('⚠️ Using CSRF from cookie');
                 }
+            }
+
+            // NEW: Server time synchronization
+            async syncServerTime() {
+                try {
+                    const requestTime = Date.now();
+                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/game_state/`, {
+                        credentials: 'include'
+                    });
+                    const responseTime = Date.now();
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.server_time) {
+                            const serverTime = new Date(data.server_time).getTime();
+                            const networkDelay = (responseTime - requestTime) / 2;
+                            this.serverTimeOffset = serverTime - (responseTime - networkDelay);
+                            this.log(`⏱️ Server time synced, offset: ${this.serverTimeOffset}ms`);
+                        }
+                    }
+                } catch (error) {
+                    this.log('⚠️ Failed to sync server time:', error.message);
+                }
+            }
+
+            getServerTime() {
+                return Date.now() + this.serverTimeOffset;
             }
 
             getCookie(name) {
@@ -868,100 +902,83 @@ console.log('🎮 Session ID auto-detection completed');
                     document.getElementById('player-avatar').textContent = this.playerData.nickname.charAt(0).toUpperCase();
                     document.getElementById('player-score').textContent = this.playerData.score || 0;
                     this.playerId = this.playerData.id;
-                } else {
-                    document.getElementById('player-name').textContent = 'Player';
-                    document.getElementById('player-avatar').textContent = 'P';
                 }
                 this.updateDebugPanel();
             }
 
-            startGamePolling() {
-                this.log(`🔄 Starting game polling for session ${this.sessionId}`);
+            // NEW: Fast polling for real-time synchronization
+            startFastPolling() {
+                this.log(`🚀 Starting fast polling for session ${this.sessionId}`);
+                this.setSyncStatus('🔄 Syncing...', 'active');
 
-                // Stop any existing polling
                 if (this.gameTimer) {
                     clearInterval(this.gameTimer);
                 }
 
-                // Poll every 2 seconds
+                // Poll every 500ms for real-time updates
                 this.gameTimer = setInterval(() => {
                     this.checkGameState();
-                }, 2000);
+                }, 500);
 
-                // Check immediately
                 this.checkGameState();
-
                 this.updateDebugPanel();
             }
 
+            // NEW: Use game_state endpoint for real-time data
             async checkGameState() {
                 try {
-                    this.log(`🔍 Checking game state for session ${this.sessionId}`);
-
-                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/`, {
-                        method: 'GET',
-                        credentials: 'include',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-
-                    const sessionData = await response.json();
-                    this.log(`📊 Session data:`, sessionData);
-
-                    this.sessionData = sessionData;
-                    this.handleGameStateUpdate(sessionData);
-                    this.updateDebugPanel();
-
-                } catch (error) {
-                    this.log(`❌ Error checking game state: ${error.message}`);
-                    // Try alternative endpoint
-                    this.checkCurrentQuestion();
-                }
-            }
-
-            async checkCurrentQuestion() {
-                try {
-                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/current_question/`, {
+                    const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/game_state/`, {
                         method: 'GET',
                         credentials: 'include'
                     });
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.log(`📊 Current question data:`, data);
-                        this.handleGameStateUpdate(data);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
                     }
+
+                    const gameState = await response.json();
+                    this.handleGameStateUpdate(gameState);
+                    this.setSyncStatus('✅ Connected', 'active');
+                    this.updateDebugPanel();
+
                 } catch (error) {
-                    this.log(`❌ Error getting current question: ${error.message}`);
+                    this.log(`❌ Error checking game state: ${error.message}`);
+                    this.setSyncStatus('⚠️ Connection issue', 'warning');
+
+                    // Fallback to regular session endpoint
+                    try {
+                        const fallbackResponse = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/`, {
+                            credentials: 'include'
+                        });
+                        if (fallbackResponse.ok) {
+                            const fallbackData = await fallbackResponse.json();
+                            this.handleGameStateUpdate(fallbackData);
+                        }
+                    } catch (fallbackError) {
+                        this.setSyncStatus('❌ Offline', 'error');
+                    }
                 }
             }
 
-            handleGameStateUpdate(data) {
-                const status = data.status;
-                this.log(`🎮 Game state: ${status}`);
+            handleGameStateUpdate(gameState) {
+                const status = gameState.status;
+                this.log(`🎮 Game state: ${status}, Q${(gameState.current_question_index || 0) + 1}, ${gameState.time_left || 0}s left`);
 
                 if (status === 'waiting') {
-                    this.showWaitingState(data);
+                    this.showWaitingState(gameState);
                 } else if (status === 'active') {
-                    this.handleActiveGame(data);
+                    this.handleActiveGame(gameState);
                 } else if (status === 'finished') {
                     this.showFinalResults();
                 }
             }
 
-            showWaitingState(sessionData) {
-                this.log('⏳ Showing waiting state');
+            showWaitingState(gameState) {
                 this.showSection('waiting-state');
 
-                // Update waiting players list
                 const waitingPlayers = document.getElementById('waiting-players');
-                if (sessionData.players && sessionData.players.length > 0) {
-                    waitingPlayers.innerHTML = sessionData.players.map(player => `
+                if (gameState.players && gameState.players.length > 0) {
+                    waitingPlayers.innerHTML = gameState.players.map(player => `
                         <div class="leaderboard-item ${player.id === this.playerId ? 'current-player' : ''}">
                             <span class="leaderboard-name">${player.nickname}</span>
                             <span class="leaderboard-score">Ready</span>
@@ -972,50 +989,29 @@ console.log('🎮 Session ID auto-detection completed');
                 }
             }
 
-            async handleActiveGame(sessionData) {
-                this.log('🎯 Game is active, handling question display');
+            handleActiveGame(gameState) {
+                // Check if this is a new question
+                const questionChanged = this.currentQuestion?.id !== gameState.current_question?.id;
 
-                // Stop polling temporarily to avoid conflicts
-                if (this.gameTimer) {
-                    clearInterval(this.gameTimer);
-                    this.gameTimer = null;
-                }
+                if (questionChanged && gameState.current_question) {
+                    this.log(`📝 New question detected: ${gameState.current_question.question_text.substring(0, 50)}`);
+                    this.currentQuestion = gameState.current_question;
+                    this.currentQuestionIndex = gameState.current_question_index || 0;
+                    this.totalQuestions = gameState.total_questions || 5;
 
-                // Look for question in different formats
-                let questionData = sessionData.current_question || sessionData.question;
-
-                if (!questionData && sessionData.quiz) {
-                    // Try to get quiz data and extract current question
-                    try {
-                        const quizResponse = await fetch(`${this.API_BASE}/quizzes/${sessionData.quiz}/`);
-                        if (quizResponse.ok) {
-                            const quizData = await quizResponse.json();
-                            const questions = quizData.questions;
-                            const currentIndex = sessionData.current_question_index || 0;
-
-                            if (questions && questions.length > currentIndex) {
-                                questionData = questions[currentIndex];
-                                this.log(`📋 Got question from quiz data: ${questionData.question_text}`);
-                            }
-                        }
-                    } catch (error) {
-                        this.log(`❌ Error fetching quiz data: ${error.message}`);
+                    // Store question start time from server
+                    if (gameState.question_start_time) {
+                        this.questionStartTime = new Date(gameState.question_start_time);
                     }
-                }
 
-                if (questionData) {
-                    this.currentQuestion = questionData;
-                    this.currentQuestionIndex = sessionData.current_question_index || 0;
-                    this.totalQuestions = sessionData.total_questions || 5;
-
-                    this.displayQuestion(questionData);
+                    this.displayQuestion(gameState.current_question);
                     this.showSection('question-section');
                     this.updateProgress();
-                    this.startQuestionTimer();
-                } else {
-                    this.log('⚠️ No question data available, resuming polling');
-                    // Resume polling if no question found
-                    this.startGamePolling();
+                }
+
+                // Update timer with server time
+                if (gameState.time_left !== undefined) {
+                    this.updateTimerFromServer(gameState.time_left);
                 }
             }
 
@@ -1049,42 +1045,21 @@ console.log('🎮 Session ID auto-detection completed');
                 submitBtn.textContent = 'Select an answer to continue';
             }
 
-            selectAnswer(answer, element) {
-                if (this.hasAnswered) return;
-
-                this.log(`👆 Answer selected: ${answer}`);
-
-                // Remove previous selection
-                document.querySelectorAll('.answer-option').forEach(option => {
-                    option.classList.remove('selected');
-                });
-
-                // Mark current selection
-                element.classList.add('selected');
-                this.selectedAnswer = answer;
-
-                // Enable submit button
-                const submitBtn = document.getElementById('submit-button');
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Answer';
-            }
-
-            startQuestionTimer() {
-                this.timeLeft = 20;
+            // NEW: Server-synchronized timer
+            updateTimerFromServer(timeLeft) {
+                this.timeLeft = Math.max(0, Math.ceil(timeLeft));
                 this.updateTimerDisplay();
 
-                this.questionTimer = setInterval(() => {
-                    this.timeLeft--;
-                    this.updateTimerDisplay();
+                if (this.timeLeft <= 0 && !this.hasAnswered) {
+                    this.disableAnswerButtons();
+                }
+            }
 
-                    if (this.timeLeft <= 0) {
-                        clearInterval(this.questionTimer);
-                        if (!this.hasAnswered) {
-                            this.log('⏰ Time\'s up!');
-                            this.showTimeoutFeedback();
-                        }
-                    }
-                }, 1000);
+            disableAnswerButtons() {
+                document.querySelectorAll('.answer-option').forEach(option => {
+                    option.classList.add('disabled');
+                });
+                document.getElementById('submit-button').disabled = true;
             }
 
             updateTimerDisplay() {
@@ -1107,6 +1082,26 @@ console.log('🎮 Session ID auto-detection completed');
                 document.getElementById('progress-fill').style.width = `${percentage}%`;
             }
 
+            selectAnswer(answer, element) {
+                if (this.hasAnswered || this.timeLeft <= 0) return;
+
+                this.log(`👆 Answer selected: ${answer}`);
+
+                // Remove previous selection
+                document.querySelectorAll('.answer-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+
+                // Mark current selection
+                element.classList.add('selected');
+                this.selectedAnswer = answer;
+
+                // Enable submit button
+                const submitBtn = document.getElementById('submit-button');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Answer';
+            }
+
             async submitAnswer() {
                 if (!this.selectedAnswer || this.hasAnswered || !this.playerId) {
                     this.log('⚠️ Cannot submit answer - missing data or already answered');
@@ -1114,15 +1109,19 @@ console.log('🎮 Session ID auto-detection completed');
                 }
 
                 this.hasAnswered = true;
-                const timeTaken = 20 - this.timeLeft;
 
-                this.log(`📤 Submitting answer: ${this.selectedAnswer} (time: ${timeTaken}s)`);
+                // Calculate time taken based on server time
+                let timeTaken = 20;
+                if (this.questionStartTime) {
+                    const now = this.getServerTime();
+                    const startTime = this.questionStartTime.getTime();
+                    timeTaken = Math.max(0, (now - startTime) / 1000);
+                }
 
-                // Disable UI
-                document.querySelectorAll('.answer-option').forEach(option => {
-                    option.classList.add('disabled');
-                });
-                document.getElementById('submit-button').disabled = true;
+                this.log(`📤 Submitting answer: ${this.selectedAnswer} (time: ${timeTaken.toFixed(1)}s)`);
+
+                // Disable UI immediately
+                this.disableAnswerButtons();
 
                 try {
                     if (!this.csrfToken) {
@@ -1144,12 +1143,11 @@ console.log('🎮 Session ID auto-detection completed');
                     });
 
                     if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Submit failed: ${response.status} - ${errorText}`);
+                        throw new Error(`Submit failed: ${response.status}`);
                     }
 
                     const result = await response.json();
-                    this.log(`✅ Answer submitted successfully:`, result);
+                    this.log(`✅ Answer submitted:`, result);
 
                     // Update player score
                     if (this.playerData) {
@@ -1174,12 +1172,6 @@ console.log('🎮 Session ID auto-detection completed');
             }
 
             showAnswerFeedback(result) {
-                // Clear question timer
-                if (this.questionTimer) {
-                    clearInterval(this.questionTimer);
-                    this.questionTimer = null;
-                }
-
                 // Highlight correct/incorrect answers
                 document.querySelectorAll('.answer-option').forEach(option => {
                     const answerText = option.querySelector('.answer-text').textContent;
@@ -1190,7 +1182,7 @@ console.log('🎮 Session ID auto-detection completed');
                     }
                 });
 
-                // Show feedback section after delay
+                // Show feedback after delay
                 setTimeout(() => {
                     this.showSection('feedback-section');
 
@@ -1218,38 +1210,14 @@ console.log('🎮 Session ID auto-detection completed');
                         correctAnswerText.textContent = result.correct_answer;
                     }
 
-                    // Update leaderboard
                     this.updateLeaderboard('feedback-leaderboard');
 
-                    // Resume polling after feedback
+                    // Resume fast polling after feedback
                     setTimeout(() => {
-                        this.startGamePolling();
+                        // Don't restart polling - let it continue
                     }, 3000);
 
                 }, 1500);
-            }
-
-            showTimeoutFeedback() {
-                if (this.questionTimer) {
-                    clearInterval(this.questionTimer);
-                    this.questionTimer = null;
-                }
-
-                this.showSection('feedback-section');
-
-                document.getElementById('feedback-icon').textContent = '⏰';
-                document.getElementById('feedback-title').textContent = 'Time\'s Up!';
-                document.getElementById('feedback-title').className = 'feedback-title incorrect';
-                document.getElementById('feedback-details').textContent = 'You ran out of time.';
-                document.getElementById('score-earned').textContent = '+0 points';
-                document.getElementById('correct-answer-display').style.display = 'block';
-                document.getElementById('correct-answer-text').textContent = this.currentQuestion.correct_answer;
-
-                this.updateLeaderboard('feedback-leaderboard');
-
-                setTimeout(() => {
-                    this.startGamePolling();
-                }, 3000);
             }
 
             async updateLeaderboard(elementId) {
@@ -1281,21 +1249,15 @@ console.log('🎮 Session ID auto-detection completed');
                     clearInterval(this.gameTimer);
                     this.gameTimer = null;
                 }
-                if (this.questionTimer) {
-                    clearInterval(this.questionTimer);
-                    this.questionTimer = null;
-                }
 
                 this.showSection('final-results');
+                this.setSyncStatus('🏁 Game Complete', 'active');
 
-                // Update final score
                 const currentScore = this.playerData ? this.playerData.score : 0;
                 document.getElementById('final-score-display').textContent = currentScore;
 
-                // Get and display final leaderboard
                 await this.updateLeaderboard('final-leaderboard-display');
 
-                // Calculate final rank
                 try {
                     const response = await fetch(`${this.API_BASE}/sessions/${this.sessionId}/leaderboard/`);
                     if (response.ok) {
@@ -1333,6 +1295,12 @@ console.log('🎮 Session ID auto-detection completed');
                 return array;
             }
 
+            setSyncStatus(message, type) {
+                const statusEl = document.getElementById('sync-status');
+                statusEl.textContent = message;
+                statusEl.className = `sync-status ${type}`;
+            }
+
             showError(message) {
                 alert(message);
                 console.error('Game Error:', message);
@@ -1347,16 +1315,14 @@ console.log('🎮 Session ID auto-detection completed');
             updateDebugPanel() {
                 document.getElementById('debug-session-id').textContent = this.sessionId || 'None';
                 document.getElementById('debug-player-id').textContent = this.playerId || 'None';
-                document.getElementById('debug-status').textContent = this.sessionData ? this.sessionData.status : 'Unknown';
-                document.getElementById('debug-polling').textContent = this.gameTimer ? 'Active' : 'Stopped';
+                document.getElementById('debug-status').textContent = this.currentQuestion ? 'Active' : 'Waiting';
+                document.getElementById('debug-polling').textContent = this.gameTimer ? 'Active (500ms)' : 'Stopped';
+                document.getElementById('debug-time-left').textContent = this.timeLeft + 's';
             }
 
             cleanup() {
                 if (this.gameTimer) {
                     clearInterval(this.gameTimer);
-                }
-                if (this.questionTimer) {
-                    clearInterval(this.questionTimer);
                 }
             }
         }
@@ -1378,7 +1344,6 @@ console.log('🎮 Session ID auto-detection completed');
         }
 
         function playAgain() {
-            // Clear game data
             localStorage.removeItem('playerData');
             localStorage.removeItem('sessionId');
             localStorage.removeItem('playerId');
@@ -1394,12 +1359,12 @@ console.log('🎮 Session ID auto-detection completed');
             panel.classList.toggle('active');
         }
 
-        // Initialize game manager when page loads
+        // Initialize synchronized game manager
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🎮 Initializing Unified Game Manager...');
-            gameManager = new UnifiedGameManager();
+            console.log('🎮 Initializing Synchronized Game Manager...');
+            gameManager = new SynchronizedGameManager();
 
-            // Show debug panel initially if no session ID in URL
+            // Show debug panel if no session ID in URL
             const urlParams = new URLSearchParams(window.location.search);
             if (!urlParams.get('session') && !urlParams.get('sessionId')) {
                 document.getElementById('debug-panel').classList.add('active');

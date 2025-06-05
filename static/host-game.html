@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Game - Quiz Platform</title>
     <style>
+        /* All existing styles remain the same */
         body {
             margin: 0;
             padding: 0;
@@ -193,7 +194,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Game Control Interface - NEW */
+        /* Game Control Interface */
         .game-controls {
             display: none;
         }
@@ -431,7 +432,7 @@
                 </div>
             </div>
 
-            <!-- GAME CONTROL INTERFACE -->
+            <!-- GAME CONTROL INTERFACE - UPDATED FOR MANUAL CONTROL -->
             <div class="game-controls" id="game-controls">
                 <div class="question-progress">
                     <div class="progress-header">
@@ -452,7 +453,7 @@
                 <div class="player-responses">
                     <div class="response-summary">
                         <div class="responses-count" id="responses-count">0 / 1 players responded</div>
-                        <div class="avg-time" id="avg-time">Avg: 0s</div>
+                        <div class="avg-time" id="avg-time">Time left: <span id="time-remaining">20s</span></div>
                     </div>
                 </div>
 
@@ -501,33 +502,31 @@
                 this.gameStatus = 'waiting';
                 this.players = [];
                 this.refreshInterval = null;
-                this.gameTimer = null;
+                this.gameStateInterval = null; // NEW: For game state polling
                 this.currentQuestionIndex = 0;
                 this.totalQuestions = 5;
                 this.currentQuestion = null;
-                this.timeLeft = 20;
 
                 this.init();
             }
 
             async init() {
                 try {
-                    console.log('Starting host game initialization...');
+                    console.log('🎮 Starting host game initialization...');
                     await this.fetchCSRFToken();
                     await this.loadQuizFromURL();
                     await this.loadQuizDetails();
                     await this.createOrGetSession();
                     this.startPlayerRefresh();
-                    console.log('Host game initialization completed successfully');
+                    console.log('✅ Host game initialization completed successfully');
                 } catch (error) {
-                    console.error('Initialization error:', error);
+                    console.error('❌ Initialization error:', error);
                     this.showNotification('Failed to initialize game. Please try again.', 'error');
                 }
             }
 
             async fetchCSRFToken() {
                 try {
-                    // Try API endpoint first
                     const response = await fetch(`${API_BASE}/auth/csrf/`, {
                         credentials: 'include'
                     });
@@ -535,18 +534,17 @@
                     if (response.ok) {
                         const data = await response.json();
                         csrfToken = data.csrfToken;
-                        console.log('CSRF token fetched from API successfully');
+                        console.log('✅ CSRF token fetched from API successfully');
                     } else {
                         throw new Error('API endpoint failed');
                     }
                 } catch (error) {
-                    console.log('API CSRF fetch failed, trying cookie fallback:', error);
-                    // Fallback to cookie
+                    console.log('⚠️ API CSRF fetch failed, trying cookie fallback:', error);
                     csrfToken = getCookie('csrftoken');
                     if (csrfToken) {
-                        console.log('CSRF token found in cookie');
+                        console.log('✅ CSRF token found in cookie');
                     } else {
-                        console.error('No CSRF token available');
+                        console.error('❌ No CSRF token available');
                     }
                 }
             }
@@ -555,7 +553,7 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 this.quizId = urlParams.get('quiz_id') || localStorage.getItem('currentQuizId');
 
-                console.log('Quiz ID from URL/localStorage:', this.quizId);
+                console.log('📝 Quiz ID from URL/localStorage:', this.quizId);
 
                 if (!this.quizId) {
                     throw new Error('No quiz ID provided');
@@ -564,7 +562,7 @@
 
             async loadQuizDetails() {
                 try {
-                    console.log('Loading quiz details for ID:', this.quizId);
+                    console.log('📚 Loading quiz details for ID:', this.quizId);
                     const response = await fetch(`${API_BASE}/quizzes/${this.quizId}/`, {
                         credentials: 'include'
                     });
@@ -574,12 +572,12 @@
                     }
 
                     const quiz = await response.json();
-                    console.log('Quiz details loaded:', quiz);
+                    console.log('📚 Quiz details loaded:', quiz);
 
                     this.displayQuizInfo(quiz);
                     this.totalQuestions = quiz.questions ? quiz.questions.length : 5;
                 } catch (error) {
-                    console.error('Error loading quiz:', error);
+                    console.error('❌ Error loading quiz:', error);
                     throw error;
                 }
             }
@@ -587,14 +585,13 @@
             displayQuizInfo(quiz) {
                 document.getElementById('quiz-title').textContent = quiz.title;
                 document.getElementById('join-code').textContent = quiz.join_code;
-                console.log('Quiz info displayed:', { title: quiz.title, joinCode: quiz.join_code });
+                console.log('🏷️ Quiz info displayed:', { title: quiz.title, joinCode: quiz.join_code });
             }
 
             async createOrGetSession() {
                 try {
-                    console.log('Creating/getting session for quiz:', this.quizId);
+                    console.log('🎯 Creating/getting session for quiz:', this.quizId);
 
-                    // Ensure we have CSRF token
                     if (!csrfToken) {
                         await this.fetchCSRFToken();
                     }
@@ -610,7 +607,7 @@
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Session creation failed:', { status: response.status, error: errorText });
+                        console.error('❌ Session creation failed:', { status: response.status, error: errorText });
                         throw new Error(`Failed to create session: ${response.status}`);
                     }
 
@@ -618,65 +615,42 @@
                     this.sessionId = session.id;
                     this.gameStatus = session.status;
 
-                    console.log('Session created/retrieved:', session);
-                    console.log('Using session ID:', this.sessionId);
+                    console.log('✅ Session created/retrieved:', session);
+                    console.log('🎯 Using session ID:', this.sessionId);
                 } catch (error) {
-                    console.error('Error creating session:', error);
+                    console.error('❌ Error creating session:', error);
                     throw error;
                 }
             }
 
             async loadPlayers() {
                 if (!this.sessionId) {
-                    console.warn('No session ID available for loading players');
+                    console.warn('⚠️ No session ID available for loading players');
                     return;
                 }
 
                 try {
-                    console.log('Loading players for session:', this.sessionId);
-
-                    // Check session status first
-                    const sessionResponse = await fetch(`${API_BASE}/sessions/${this.sessionId}/`, {
-                        credentials: 'include'
-                    });
-
-                    if (sessionResponse.ok) {
-                        const sessionData = await sessionResponse.json();
-
-                        // If game status changed to active and we're still in waiting mode
-                        if (sessionData.status === 'active' && this.gameStatus === 'waiting') {
-                            this.gameStatus = 'active';
-                            this.currentQuestionIndex = sessionData.current_question_index || 0;
-                            await this.switchToGameInterface();
-                            return;
-                        }
-                    }
-
-                    // Try the leaderboard endpoint for player data
-                    let response = await fetch(`${API_BASE}/sessions/${this.sessionId}/leaderboard/`, {
+                    const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/leaderboard/`, {
                         credentials: 'include'
                     });
 
                     if (!response.ok) {
-                        console.warn(`Leaderboard endpoint failed (${response.status}), trying session endpoint...`);
+                        console.warn(`⚠️ Leaderboard endpoint failed (${response.status}), trying session endpoint...`);
 
-                        // If leaderboard fails, try getting session data directly
-                        response = await fetch(`${API_BASE}/sessions/${this.sessionId}/`, {
+                        const sessionResponse = await fetch(`${API_BASE}/sessions/${this.sessionId}/`, {
                             credentials: 'include'
                         });
 
-                        if (!response.ok) {
-                            throw new Error(`Both endpoints failed: ${response.status}`);
+                        if (!sessionResponse.ok) {
+                            throw new Error(`Both endpoints failed: ${sessionResponse.status}`);
                         }
 
-                        const sessionData = await response.json();
+                        const sessionData = await sessionResponse.json();
                         this.players = sessionData.players || [];
                     } else {
                         const data = await response.json();
                         this.players = data.leaderboard || [];
                     }
-
-                    console.log('Players loaded:', this.players);
 
                     if (this.gameStatus === 'waiting') {
                         this.displayPlayers();
@@ -685,8 +659,7 @@
                     }
 
                 } catch (error) {
-                    console.error('Error loading players:', error);
-                    // Don't show error notification for polling failures, just log it
+                    console.error('❌ Error loading players:', error);
                 }
             }
 
@@ -723,15 +696,60 @@
                     buttonText.textContent = 'Start Game (Need at least 1 player)';
                 }
 
-                console.log('Players displayed:', this.players.length);
+                console.log('👥 Players displayed:', this.players.length);
             }
 
             startPlayerRefresh() {
-                console.log('Starting player refresh polling...');
+                console.log('🔄 Starting player refresh polling...');
                 this.loadPlayers();
                 this.refreshInterval = setInterval(() => {
                     this.loadPlayers();
-                }, 5000); // Reduced frequency to avoid spam
+                }, 3000);
+            }
+
+            // NEW: Start game state monitoring for host
+            startGameStateMonitoring() {
+                console.log('📊 Starting game state monitoring...');
+
+                this.gameStateInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/game_state/`, {
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            const gameState = await response.json();
+                            this.updateHostInterface(gameState);
+                        }
+                    } catch (error) {
+                        console.error('❌ Game state monitoring error:', error);
+                    }
+                }, 1000); // Update every second for host
+            }
+
+            // NEW: Update host interface with real-time data
+            updateHostInterface(gameState) {
+                // Update timer display
+                const timeLeft = Math.ceil(gameState.time_left || 0);
+                document.getElementById('question-timer').textContent = timeLeft;
+                document.getElementById('time-remaining').textContent = `${timeLeft}s`;
+
+                // Update timer color based on time left
+                const timerElement = document.getElementById('question-timer');
+                if (timeLeft <= 5) {
+                    timerElement.classList.add('warning');
+                } else {
+                    timerElement.classList.remove('warning');
+                }
+
+                // Update responses count (you could track actual responses here)
+                document.getElementById('responses-count').textContent =
+                    `? / ${gameState.player_count} players responded`;
+
+                // Update leaderboard
+                if (gameState.players) {
+                    this.updateGameLeaderboard(gameState.players);
+                }
             }
 
             async startGame() {
@@ -741,15 +759,12 @@
                 }
 
                 try {
-                    console.log('Starting game for session:', this.sessionId);
+                    console.log('🚀 Starting game for session:', this.sessionId);
                     this.setLoadingState(true, 'start');
 
-                    // Ensure we have fresh CSRF token
                     if (!csrfToken) {
                         await this.fetchCSRFToken();
                     }
-
-                    console.log('Using CSRF token for start game:', csrfToken ? 'Present' : 'Missing');
 
                     const response = await fetch(`${API_BASE}/sessions/${this.sessionId}/start_game/`, {
                         method: 'POST',
@@ -762,11 +777,10 @@
 
                     if (!response.ok) {
                         const errorText = await response.text();
-                        console.error('Game start failed:', { status: response.status, error: errorText });
+                        console.error('❌ Game start failed:', { status: response.status, error: errorText });
 
                         if (response.status === 403) {
-                            // Try to refresh CSRF token and retry
-                            console.log('403 error, refreshing CSRF token and retrying...');
+                            console.log('🔄 403 error, refreshing CSRF token and retrying...');
                             await this.fetchCSRFToken();
 
                             const retryResponse = await fetch(`${API_BASE}/sessions/${this.sessionId}/start_game/`, {
@@ -784,7 +798,7 @@
                             }
 
                             const retryData = await retryResponse.json();
-                            console.log('Game started successfully on retry:', retryData);
+                            console.log('✅ Game started successfully on retry:', retryData);
                             this.gameStatus = 'active';
                             this.currentQuestionIndex = 0;
                             await this.switchToGameInterface();
@@ -795,14 +809,14 @@
                     }
 
                     const data = await response.json();
-                    console.log('Game started successfully:', data);
+                    console.log('✅ Game started successfully:', data);
 
                     this.gameStatus = 'active';
                     this.currentQuestionIndex = 0;
                     await this.switchToGameInterface();
 
                 } catch (error) {
-                    console.error('Error starting game:', error);
+                    console.error('❌ Error starting game:', error);
                     this.showNotification('Failed to start game: ' + error.message, 'error');
                 } finally {
                     this.setLoadingState(false, 'start');
@@ -810,7 +824,12 @@
             }
 
             async switchToGameInterface() {
-                console.log('Switching to game interface');
+                console.log('🎮 Switching to game interface');
+
+                // Stop player refresh, start game state monitoring
+                if (this.refreshInterval) {
+                    clearInterval(this.refreshInterval);
+                }
 
                 // Hide waiting interface, show game controls
                 document.getElementById('waiting-interface').style.display = 'none';
@@ -819,8 +838,8 @@
                 // Load current question
                 await this.loadCurrentQuestion();
 
-                // Start game timer
-                this.startQuestionTimer();
+                // Start monitoring game state for real-time updates
+                this.startGameStateMonitoring();
 
                 this.showNotification('Game started! Players can now see the first question.', 'success');
             }
@@ -843,7 +862,7 @@
                         this.displayCurrentQuestion();
                     }
                 } catch (error) {
-                    console.error('Error loading current question:', error);
+                    console.error('❌ Error loading current question:', error);
                 }
             }
 
@@ -870,59 +889,12 @@
                 `).join('');
             }
 
-            startQuestionTimer() {
-                this.timeLeft = 20;
-                this.updateTimerDisplay();
-
-                this.gameTimer = setInterval(() => {
-                    this.timeLeft--;
-                    this.updateTimerDisplay();
-
-                    if (this.timeLeft <= 0) {
-                        this.stopQuestionTimer();
-                        // Auto advance after timer ends
-                        setTimeout(() => {
-                            this.nextQuestion();
-                        }, 2000);
-                    }
-                }, 1000);
-            }
-
-            stopQuestionTimer() {
-                if (this.gameTimer) {
-                    clearInterval(this.gameTimer);
-                    this.gameTimer = null;
-                }
-            }
-
-            updateTimerDisplay() {
-                const timerElement = document.getElementById('question-timer');
-                if (timerElement) {
-                    timerElement.textContent = this.timeLeft;
-
-                    if (this.timeLeft <= 5) {
-                        timerElement.classList.add('warning');
-                    } else {
-                        timerElement.classList.remove('warning');
-                    }
-                }
-
-                // Update responses count
-                this.updateResponsesCount();
-            }
-
-            updateResponsesCount() {
-                const responsesElement = document.getElementById('responses-count');
-                if (responsesElement) {
-                    // This would need to be updated with actual response tracking
-                    responsesElement.textContent = `0 / ${this.players.length} players responded`;
-                }
-            }
-
-            updateGameLeaderboard() {
+            updateGameLeaderboard(players = null) {
                 const leaderboardElement = document.getElementById('game-leaderboard');
-                if (leaderboardElement && this.players.length > 0) {
-                    leaderboardElement.innerHTML = this.players.map((player, index) => `
+                const playersToShow = players || this.players;
+
+                if (leaderboardElement && playersToShow.length > 0) {
+                    leaderboardElement.innerHTML = playersToShow.map((player, index) => `
                         <div class="leaderboard-item">
                             <span>#${index + 1} ${player.nickname}</span>
                             <span>${player.score || 0} pts</span>
@@ -932,9 +904,9 @@
             }
 
             async nextQuestion() {
-                this.stopQuestionTimer();
-
                 try {
+                    console.log('⏭️ Host requesting next question');
+
                     if (!csrfToken) {
                         await this.fetchCSRFToken();
                     }
@@ -954,24 +926,28 @@
                     }
 
                     const data = await response.json();
-                    console.log('Next question response:', data);
+                    console.log('⏭️ Next question response:', data);
 
                     if (data.status === 'Quiz completed') {
                         this.showGameCompleted(data.final_scores || []);
                     } else {
                         this.currentQuestionIndex++;
                         await this.loadCurrentQuestion();
-                        this.startQuestionTimer();
+                        console.log(`📝 Advanced to question ${this.currentQuestionIndex + 1}`);
                     }
 
                 } catch (error) {
-                    console.error('Error getting next question:', error);
+                    console.error('❌ Error getting next question:', error);
                     this.showNotification('Failed to get next question: ' + error.message, 'error');
                 }
             }
 
             showGameCompleted(finalScores) {
-                this.stopQuestionTimer();
+                // Stop monitoring
+                if (this.gameStateInterval) {
+                    clearInterval(this.gameStateInterval);
+                }
+
                 document.getElementById('game-controls').innerHTML = `
                     <div style="text-align: center; padding: 40px;">
                         <h2 style="color: #16a34a; margin-bottom: 30px;">🎉 Quiz Completed!</h2>
@@ -1015,7 +991,7 @@
                 notification.className = `notification ${type}`;
                 notification.style.display = 'block';
 
-                console.log(`Notification (${type}): ${message}`);
+                console.log(`📢 Notification (${type}): ${message}`);
 
                 if (type === 'success' || type === 'info') {
                     setTimeout(() => {
@@ -1027,11 +1003,11 @@
             cleanup() {
                 if (this.refreshInterval) {
                     clearInterval(this.refreshInterval);
-                    console.log('Player refresh polling stopped');
+                    console.log('🛑 Player refresh polling stopped');
                 }
-                if (this.gameTimer) {
-                    clearInterval(this.gameTimer);
-                    console.log('Game timer stopped');
+                if (this.gameStateInterval) {
+                    clearInterval(this.gameStateInterval);
+                    console.log('🛑 Game state monitoring stopped');
                 }
             }
         }
@@ -1040,7 +1016,7 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('Page loaded, starting game manager...');
+            console.log('📄 Page loaded, starting game manager...');
             gameManager = new GameHostManager();
         });
 
@@ -1051,21 +1027,21 @@
         });
 
         function refreshPlayers() {
-            console.log('Manual player refresh requested');
+            console.log('🔄 Manual player refresh requested');
             if (gameManager) {
                 gameManager.loadPlayers();
             }
         }
 
         function startGame() {
-            console.log('Start game button clicked');
+            console.log('🚀 Start game button clicked');
             if (gameManager) {
                 gameManager.startGame();
             }
         }
 
         function nextQuestion() {
-            console.log('Next question button clicked');
+            console.log('⏭️ Next question button clicked');
             if (gameManager) {
                 gameManager.nextQuestion();
             }
@@ -1073,8 +1049,7 @@
 
         function endGame() {
             if (confirm('Are you sure you want to end the game?')) {
-                // This would need backend implementation
-                console.log('End game requested');
+                console.log('🛑 End game requested');
                 window.location.href = '/dashboard/';
             }
         }
